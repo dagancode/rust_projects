@@ -68,6 +68,10 @@ impl Fighter for Goblin {
             damage: self.poison_damage,
         })
     }
+
+    fn decide(&mut self, opponent: &dyn Fighter) -> Action {
+        self.choose_action(opponent)
+    }
 }
 
 impl Ai for Goblin {
@@ -89,6 +93,7 @@ impl Ai for Goblin {
             return Action::NormalAttack;
         }
 
+        println!("~~ {} uses Poison Dart Special Attack ~~", self.name());
         Action::SpecialAttack
     }
 }

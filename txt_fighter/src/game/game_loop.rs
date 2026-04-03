@@ -1,5 +1,5 @@
-use crate::models::fighter::Fighter;
 use crate::game::execute_turn::execute_turn;
+use crate::models::fighter::Fighter;
 
 /// A loop that continues until one of the fighters is no longer alive.
 ///
