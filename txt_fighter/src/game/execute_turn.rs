@@ -1,11 +1,18 @@
 use crate::models::fighter::Fighter;
+use crate::models::ai::Action;
+use crate::models::types::AttackResult;
 
 pub fn execute_turn(attacker: &mut dyn Fighter, defender: &mut dyn Fighter) -> bool {
     attacker.refresh_state();
     defender.refresh_state();
 
     let base_damage = attacker.attack();
-    let special_attack = attacker.special_attack().unwrap_or_default();
+    //let special_attack = attacker.special_attack().unwrap_or_default();
+
+    let special_attack = match attacker.decide(defender) {
+        Action::SpecialAttack => attacker.special_attack().unwrap_or_default(),
+        Action::NormalAttack => AttackResult::default(),
+    };
 
     let shielded_damage = defender
         .shield_attack(base_damage + special_attack.damage as u32)

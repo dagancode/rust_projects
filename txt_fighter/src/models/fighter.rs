@@ -1,4 +1,5 @@
-use crate::models::types::{AttackResult, StatusEffect, SpecialAttackInfo};
+use crate::models::ai::Action;
+use crate::models::types::{AttackResult, SpecialAttackInfo, StatusEffect};
 
 pub trait Fighter {
     /// Returns the attack power of the fighter
@@ -52,6 +53,11 @@ pub trait Fighter {
         &[]
     }
 
+    /// Decides whether to use a special attack or a normal attack
+    fn decide(&mut self, _opponent: &dyn Fighter) -> Action {
+        Action::NormalAttack
+    }
+
     /// Refreshes the state of the fighter
     fn refresh_state(&mut self) {
         self.apply_effects();
@@ -68,11 +74,6 @@ pub trait Fighter {
 
         #[cfg(feature = "slow")]
         std::thread::sleep(std::time::Duration::from_secs(1));
-        println!(
-            "{} - Health: {}{}",
-            self.name(),
-            self.health(),
-            shield_text,
-        );
+        println!("{} - Health: {}{}", self.name(), self.health(), shield_text,);
     }
 }
