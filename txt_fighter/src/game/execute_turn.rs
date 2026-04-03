@@ -1,13 +1,20 @@
-use crate::models::fighter::Fighter;
 use crate::models::ai::Action;
+use crate::models::fighter::Fighter;
 use crate::models::types::AttackResult;
 
+/// Executes a single turn of a battle between two fighters.
+///
+/// It takes two fighters as arguments and simulates a single turn of a battle between them.
+/// The fighters will take turns attacking each other and the defender will have a chance to shield the attack.
+/// Any special attacks will be resolved and their damage applied.
+/// The turn will also display the current health of both fighters and any damage taken.
+///
+/// Returns true if the defender is no longer alive, false otherwise.
 pub fn execute_turn(attacker: &mut dyn Fighter, defender: &mut dyn Fighter) -> bool {
     attacker.refresh_state();
     defender.refresh_state();
 
     let base_damage = attacker.attack();
-    //let special_attack = attacker.special_attack().unwrap_or_default();
 
     let special_attack = match attacker.decide(defender) {
         Action::SpecialAttack => attacker.special_attack().unwrap_or_default(),
@@ -26,7 +33,6 @@ pub fn execute_turn(attacker: &mut dyn Fighter, defender: &mut dyn Fighter) -> b
         defender.name(),
         total_damage,
         base_damage + special_attack.damage as u32,
-        //bonus_damage_text,
         attacker.name()
     );
 
