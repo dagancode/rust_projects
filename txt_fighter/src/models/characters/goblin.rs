@@ -1,5 +1,6 @@
 use crate::models::ai::{Action, Ai};
 use crate::models::fighter::Fighter;
+use crate::models::item::{Drop, Item};
 use crate::models::types::{AttackResult, SpecialAttackInfo, StatusEffect};
 
 pub struct Goblin {
@@ -9,6 +10,7 @@ pub struct Goblin {
     poison_turns: u32,
     poison_uses: u32,
     name: String,
+    drops: Vec<Drop>,
 }
 
 impl Goblin {
@@ -21,6 +23,16 @@ impl Goblin {
             poison_turns: 3,
             poison_uses: 1,
             name: String::from("Goblin"),
+            drops: vec![
+                Drop {
+                    item: Item::Coins(10),
+                    chance: 0.5,
+                },
+                Drop {
+                    item: Item::healing_potion_1(),
+                    chance: 0.75,
+                },
+            ],
         }
     }
 }
@@ -71,6 +83,22 @@ impl Fighter for Goblin {
 
     fn decide(&mut self, opponent: &dyn Fighter) -> Action {
         self.choose_action(opponent)
+    }
+
+    fn drop_items(&mut self) -> Vec<Item> {
+        let items = self
+            .drops
+            .iter()
+            .filter(|d| {
+                let roll = rand::random_range(0.0..=1.0);
+
+                roll < d.chance
+            })
+            .map(|drop| drop.item.clone())
+            .collect();
+
+        self.drops.clear();
+        items
     }
 }
 

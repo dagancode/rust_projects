@@ -23,32 +23,26 @@ pub fn game_loop(attacker: &mut dyn Fighter, defender: &mut dyn Fighter) {
         );
         #[cfg(feature = "slow")]
         std::thread::sleep(std::time::Duration::from_secs(1));
+        // Turn 1 - Hero defends
         if execute_turn(attacker, defender) {
             #[cfg(feature = "slow")]
             std::thread::sleep(std::time::Duration::from_secs(1));
-            println!(
-                "+====================================================+\n{} won!\n",
-                attacker.name()
-            );
-            attacker.display();
-            defender.display();
+            handle_victory(attacker, defender);
             break;
         }
 
         #[cfg(feature = "slow")]
-        std::thread::sleep(std::time::Duration::from_secs(1));
+        std::thread::sleep(std::time::Duration::from_millis(500));
         println!("|-------------------------VS-------------------------|");
         #[cfg(feature = "slow")]
-        std::thread::sleep(std::time::Duration::from_secs(1));
+        std::thread::sleep(std::time::Duration::from_millis(500));
+
+
+        // Turn 2 - Hero Attacks
         if execute_turn(defender, attacker) {
             #[cfg(feature = "slow")]
             std::thread::sleep(std::time::Duration::from_secs(1));
-            println!(
-                "+====================================================+\n\n{} won!\n",
-                defender.name()
-            );
-            defender.display();
-            attacker.display();
+            handle_victory(defender, attacker);
             break;
         }
         round += 1;
@@ -56,4 +50,24 @@ pub fn game_loop(attacker: &mut dyn Fighter, defender: &mut dyn Fighter) {
         #[cfg(feature = "slow")]
         std::thread::sleep(std::time::Duration::from_secs(2));
     }
+}
+
+/// Handles the victory of a fighter by displaying the winner's name, the items dropped by the loser,
+/// consuming the items and displaying the final health of both fighters.
+fn handle_victory(winner: &mut dyn Fighter, loser: &mut dyn Fighter) {
+    println!(
+        "+====================================================+\n\n{} won!\n",
+        winner.name()
+    );
+
+    let drops = loser.drop_items();
+
+    for item in &drops {
+        println!("~~ {} dropped {} ~~", loser.name(), item.name());
+    }
+
+    winner.consume_items(drops);
+
+    winner.display();
+    loser.display();
 }
