@@ -62,7 +62,7 @@ impl Fighter for Goblin {
         if self.poison_uses > 0 {
             self.poison_uses -= 1;
             return Some(AttackResult {
-                name: "Poison Dart".to_string(),
+                name: "Poison Dart 🧪".to_string(),
                 damage: 0,
                 effect: Some(StatusEffect {
                     name: String::from("Poison"),
@@ -76,7 +76,7 @@ impl Fighter for Goblin {
 
     fn special_attack_info(&self) -> Option<SpecialAttackInfo> {
         Some(SpecialAttackInfo {
-            name: "Poison Dart".to_string(),
+            name: "Poison Dart 🧪".to_string(),
             damage: self.poison_damage,
         })
     }
@@ -121,7 +121,7 @@ impl Ai for Goblin {
             return Action::NormalAttack;
         }
 
-        println!("~~ {} uses Poison Dart Special Attack ~~", self.name());
+        println!("~~ {} uses Poison Dart 🧪  Attack ~~", self.name());
         Action::SpecialAttack
     }
 }

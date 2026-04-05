@@ -62,10 +62,6 @@ fn handle_victory(winner: &mut dyn Fighter, loser: &mut dyn Fighter) {
 
     let drops = loser.drop_items();
 
-    for item in &drops {
-        println!("~~ {} dropped {} ~~", loser.name(), item.name());
-    }
-
     winner.consume_items(drops);
 
     winner.display();

@@ -66,7 +66,7 @@ pub trait Fighter {
     fn decide(&mut self, _opponent: &dyn Fighter) -> Action {
         Action::NormalAttack
     }
-    
+
     /// Drops all items held by the fighter and returns them in a vector.
     fn drop_items(&mut self) -> Vec<Item> {
         vec![]
@@ -81,19 +81,35 @@ pub trait Fighter {
     /// Displays the state of the fighter
     fn display(&self) {
         let shield_text = if let Some(shield_health) = self.shield_health() {
-            format!(", Shield: {}", shield_health)
+            if shield_health > 0 {
+                format!(", Shield: {}🛡️ ", shield_health)
+            }
+            else {
+                "".to_string()
+            }
         } else {
             "".to_string()
         };
 
         let armor_text = if let Some(armor_health) = self.armor_health() {
-            format!(", Armor: {}", armor_health)
+            if armor_health > 0 {
+                format!(", Armor : {}🪖 ", armor_health)
+            }
+            else {
+                "".to_string()
+            }
         } else {
             "".to_string()
         };
 
         #[cfg(feature = "slow")]
         std::thread::sleep(std::time::Duration::from_secs(1));
-        println!("{} - Health: {}{}{}", self.name(), self.health(), armor_text, shield_text,);
+        println!(
+            "{} - Health: {}❤️ {}{}",
+            self.name(),
+            self.health(),
+            armor_text,
+            shield_text,
+        );
     }
 }

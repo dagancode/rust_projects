@@ -17,16 +17,24 @@ impl Item {
     pub fn name(&self) -> String {
         match self {
             Item::Potion(effect) => effect.name.clone(),
-            Item::Coins(amount) => format!("{} coins", amount),
-            Item::Armor(amount) => format!("{} armor", amount),
-            Item::Shield(amount) => format!("{} shield", amount),
+            Item::Coins(amount) => format!("{} coins 🪙 ", amount),
+            Item::Armor(amount) => format!("{} armor 🪖 ", amount),
+            Item::Shield(amount) => format!("{}HP shield 🛡️ ", amount),
         }
     }
 
     pub fn healing_potion_1() -> Item {
         Item::Potion(StatusEffect {
-            name: String::from("Healing Potion I"),
+            name: String::from("Healing Potion I 🧉"),
             damage_per_turn: -25,
+            turns_remaining: 1,
+        })
+    }
+
+    pub fn healing_potion_2() -> Item {
+        Item::Potion(StatusEffect {
+            name: String::from("Healing Potion II 🧉"),
+            damage_per_turn: -45,
             turns_remaining: 1,
         })
     }

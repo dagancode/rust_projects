@@ -14,7 +14,7 @@ impl Skeleton {
         Skeleton {
             health: Self::BASE_HEALTH,
             damage: 25,
-            name: String::from("Skeleton 🩻"),
+            name: String::from("Skeleton 🩻 "),
             drops: vec![
                 Drop {
                     item: Item::Coins(15),

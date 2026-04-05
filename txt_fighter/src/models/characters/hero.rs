@@ -18,7 +18,7 @@ impl Hero {
         Hero {
             health: Self::BASE_HEALTH,
             damage: 35,
-            shield_health: 65,
+            shield_health: 75,
             armor: 10,
             coins: 0,
             name: String::from("Hero 🤴"),
@@ -103,7 +103,7 @@ impl Fighter for Hero {
 
     fn shield_attack(&mut self, amount: u32) -> Option<u32> {
         // shield can only reduce damage by 30%
-        let max_shielded = (self.shield_health as f32 * 0.3).round() as u32;
+        let max_shielded = (self.shield_health as f32 * 0.5).round() as u32;
         let shielded = if amount > max_shielded {
             max_shielded
         } else {
