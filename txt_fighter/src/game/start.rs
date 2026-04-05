@@ -1,9 +1,10 @@
 use std::io::{self, Write};
 
-use rand::{Rng, rng};
+use rand::{self, RngExt, rng};
 
 use crate::game::game_loop;
 use crate::models::characters::*;
+use crate::models::fighter::Fighter;
 
 /// Starts a game of TXT Fighter.
 ///
@@ -23,34 +24,26 @@ use crate::models::characters::*;
 pub fn start() {
     match select_mode() {
         GameMode::Campaign => {
-            let mut hero = crate::models::characters::hero::Hero::new();
-            let mut level_1_enemy = Goblin::new();
+            let mut hero = Hero::new();
+            let enemies:Vec<Box<dyn Fighter>> = campaign_enemies();
 
-            game_loop(&mut level_1_enemy, &mut hero);
+            for mut enemy in enemies {
+                game_loop(enemy.as_mut(), &mut hero);
 
-            let mut level_2_enemy = Dragon::new();
-
-            game_loop(&mut level_2_enemy, &mut hero);
+                if !hero.is_alive() {
+                    break;
+                }
+            }
         }
         GameMode::RandomBattle => {
-            let mut hero = crate::models::characters::hero::Hero::new();
+            let mut hero = Hero::new();
+            let mut enemies:Vec<Box<dyn Fighter>> = campaign_enemies();
 
-            let random = rng().next_u32();
+            let random = rng().random_range(0..enemies.len());
 
-            let random_enemy: Enemy = if random % 2 == 0 {
-                Enemy::Goblin(crate::models::characters::goblin::Goblin::new())
-            } else {
-                Enemy::Dragon(crate::models::characters::dragon::Dragon::new())
-            };
+            let random_enemy: &mut Box<dyn Fighter> = &mut enemies[random];
 
-            match random_enemy {
-                Enemy::Goblin(mut goblin) => {
-                    game_loop(&mut goblin, &mut hero);
-                }
-                Enemy::Dragon(mut dragon) => {
-                    game_loop(&mut dragon, &mut hero);
-                }
-            };
+            game_loop(random_enemy.as_mut(), &mut hero);
         }
     }
 }
@@ -80,7 +73,10 @@ enum GameMode {
     RandomBattle,
 }
 
-enum Enemy {
-    Goblin(Goblin),
-    Dragon(Dragon),
+fn campaign_enemies() -> Vec<Box<dyn Fighter>> {
+    let goblin = Box::new(Goblin::new());
+    let skeleton = Box::new(Skeleton::new());
+    let dragon = Box::new(Dragon::new());
+
+    vec![goblin, skeleton, dragon]
 }

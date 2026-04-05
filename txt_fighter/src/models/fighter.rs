@@ -1,4 +1,5 @@
 use crate::models::ai::Action;
+use crate::models::item::Item;
 use crate::models::types::{AttackResult, SpecialAttackInfo, StatusEffect};
 
 pub trait Fighter {
@@ -23,6 +24,9 @@ pub trait Fighter {
     /// Clears stale effects
     fn clear_stale_effects(&mut self) {}
 
+    /// Consumes all items held by the fighter
+    fn consume_items(&mut self, _items: Vec<Item>) {}
+
     /// Checks if the fighter is alive
     fn is_alive(&self) -> bool {
         self.health() > 0
@@ -43,6 +47,11 @@ pub trait Fighter {
         None
     }
 
+    /// Returns the armor health of the fighter
+    fn armor_health(&self) -> Option<u32> {
+        None
+    }
+
     /// Returns the info of a special attack
     fn special_attack_info(&self) -> Option<SpecialAttackInfo> {
         None
@@ -56,6 +65,11 @@ pub trait Fighter {
     /// Decides whether to use a special attack or a normal attack
     fn decide(&mut self, _opponent: &dyn Fighter) -> Action {
         Action::NormalAttack
+    }
+    
+    /// Drops all items held by the fighter and returns them in a vector.
+    fn drop_items(&mut self) -> Vec<Item> {
+        vec![]
     }
 
     /// Refreshes the state of the fighter
@@ -72,8 +86,14 @@ pub trait Fighter {
             "".to_string()
         };
 
+        let armor_text = if let Some(armor_health) = self.armor_health() {
+            format!(", Armor: {}", armor_health)
+        } else {
+            "".to_string()
+        };
+
         #[cfg(feature = "slow")]
         std::thread::sleep(std::time::Duration::from_secs(1));
-        println!("{} - Health: {}{}", self.name(), self.health(), shield_text,);
+        println!("{} - Health: {}{}{}", self.name(), self.health(), armor_text, shield_text,);
     }
 }

@@ -1,3 +1,4 @@
+use crate::models::Item;
 use crate::models::fighter::Fighter;
 use crate::models::types::StatusEffect;
 
@@ -5,6 +6,8 @@ pub struct Hero {
     health: u32,
     damage: u32,
     shield_health: u32,
+    armor: u32,
+    coins: u32,
     name: String,
     state: Vec<StatusEffect>,
 }
@@ -16,7 +19,9 @@ impl Hero {
             health: Self::BASE_HEALTH,
             damage: 35,
             shield_health: 65,
-            name: String::from("Hero"),
+            armor: 10,
+            coins: 0,
+            name: String::from("Hero 🤴"),
             state: Vec::new(),
         }
     }
@@ -33,7 +38,18 @@ impl Fighter for Hero {
 
     fn take_damage(&mut self, amount: i32) {
         if amount >= 0 {
-            self.health = self.health.saturating_sub(amount as u32);
+            if self.armor > 0 {
+                let remaining_armor = self.armor as i32 - amount; 
+
+                if remaining_armor < 0 {
+                    self.armor = 0;
+                    self.health = self.health.saturating_sub(remaining_armor.unsigned_abs());
+                } else {
+                    self.armor = remaining_armor as u32;
+                }
+            } else {
+                self.health = self.health.saturating_sub(amount as u32);
+            }
         } else {
             self.health = self.health.saturating_add(amount.unsigned_abs());
         }
@@ -60,10 +76,18 @@ impl Fighter for Hero {
             .filter(|sfx| sfx.turns_remaining > 0)
             .map(|e| {
                 e.turns_remaining -= 1;
-                println!(
-                    "~ {} suffers {} {} damage ~",
-                    fighter_name, e.damage_per_turn, e.name
-                );
+                if e.damage_per_turn > 0 {
+                    println!(
+                        "~ {} suffers {} {} damage ~",
+                        fighter_name, e.damage_per_turn, e.name
+                    );
+                }
+                else {
+                    println!(
+                        "~ {} gained {} HP using {} ~",
+                        fighter_name, (e.damage_per_turn).unsigned_abs(), e.name
+                    );
+                }
                 e.damage_per_turn
             })
             .sum();
@@ -91,5 +115,27 @@ impl Fighter for Hero {
 
     fn shield_health(&self) -> Option<u32> {
         Some(self.shield_health)
+    }
+
+    fn armor_health(&self) -> Option<u32> {
+        Some(self.armor)
+    }
+
+    fn consume_items(&mut self, items: Vec<Item>) {
+        if items.is_empty() {
+            return;
+        }
+
+        for item in items {
+            println!("~ Picked up: {} ~", item.name());
+
+            match item {
+                Item::Coins(amount) => self.coins += amount,
+                Item::Potion(effect) => self.add_effect(effect),
+                Item::Armor(amount) => self.armor += amount,
+                Item::Shield(amount) => self.shield_health += amount,
+                _ => (),
+            }
+        }
     }
 }
