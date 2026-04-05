@@ -17,7 +17,7 @@ impl Dragon {
             damage: 40,
             fireball_damage: 60,
             uses: 1,
-            name: String::from("Dragon"),
+            name: String::from("Dragon 🐉"),
         }
     }
 }

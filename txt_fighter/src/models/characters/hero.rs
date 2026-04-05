@@ -21,7 +21,7 @@ impl Hero {
             shield_health: 65,
             armor: 10,
             coins: 0,
-            name: String::from("Hero"),
+            name: String::from("Hero 🤴"),
             state: Vec::new(),
         }
     }
@@ -126,7 +126,6 @@ impl Fighter for Hero {
             return;
         }
 
-
         for item in items {
             println!("~ Picked up: {} ~", item.name());
 
@@ -134,6 +133,8 @@ impl Fighter for Hero {
                 Item::Coins(amount) => self.coins += amount,
                 Item::Potion(effect) => self.add_effect(effect),
                 Item::Armor(amount) => self.armor += amount,
+                Item::Shield(amount) => self.shield_health += amount,
+                _ => (),
             }
         }
     }

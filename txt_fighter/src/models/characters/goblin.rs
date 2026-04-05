@@ -22,7 +22,7 @@ impl Goblin {
             poison_damage: 10,
             poison_turns: 3,
             poison_uses: 1,
-            name: String::from("Goblin"),
+            name: String::from("Goblin 👺"),
             drops: vec![
                 Drop {
                     item: Item::Coins(10),

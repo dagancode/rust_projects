@@ -5,6 +5,7 @@ pub enum Item {
     Potion(StatusEffect),
     Coins(u32),
     Armor(u32),
+    Shield(u32),
 }
 
 pub struct Drop {
@@ -18,6 +19,7 @@ impl Item {
             Item::Potion(effect) => effect.name.clone(),
             Item::Coins(amount) => format!("{} coins", amount),
             Item::Armor(amount) => format!("{} armor", amount),
+            Item::Shield(amount) => format!("{} shield", amount),
         }
     }
 
