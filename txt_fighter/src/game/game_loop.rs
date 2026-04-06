@@ -37,7 +37,6 @@ pub fn game_loop(attacker: &mut dyn Fighter, defender: &mut dyn Fighter) {
         #[cfg(feature = "slow")]
         std::thread::sleep(std::time::Duration::from_millis(500));
 
-
         // Turn 2 - Hero Attacks
         if execute_turn(defender, attacker) {
             #[cfg(feature = "slow")]
@@ -56,7 +55,7 @@ pub fn game_loop(attacker: &mut dyn Fighter, defender: &mut dyn Fighter) {
 /// consuming the items and displaying the final health of both fighters.
 fn handle_victory(winner: &mut dyn Fighter, loser: &mut dyn Fighter) {
     println!(
-        "+====================================================+\n\n{} won!\n",
+        "+====================================================+\n\n{}  won! 🏆 \n",
         winner.name()
     );
 
@@ -64,6 +63,8 @@ fn handle_victory(winner: &mut dyn Fighter, loser: &mut dyn Fighter) {
 
     winner.consume_items(drops);
 
+    println!("+====================================================+");
     winner.display();
     loser.display();
+    println!("+====================================================+\n");
 }

@@ -6,6 +6,8 @@ pub enum Item {
     Coins(u32),
     Armor(u32),
     Shield(u32),
+    // Weapon(name: String, damage: u32)
+    Weapon(String, u32),
 }
 
 pub struct Drop {
@@ -20,6 +22,7 @@ impl Item {
             Item::Coins(amount) => format!("{} coins 🪙 ", amount),
             Item::Armor(amount) => format!("{} armor 🪖 ", amount),
             Item::Shield(amount) => format!("{}HP shield 🛡️ ", amount),
+            Item::Weapon(name, _amount) => format!("{} 🗡️ ", name),
         }
     }
 

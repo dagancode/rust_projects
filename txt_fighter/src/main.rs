@@ -10,4 +10,8 @@ fn main() {
 
     let duration = end - start;
     println!("\nCompleted in {:?}", duration);
+
+    println!("╔════╗");
+    println!("║    ║");
+    println!("╚════╝");
 }

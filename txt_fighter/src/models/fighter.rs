@@ -83,8 +83,7 @@ pub trait Fighter {
         let shield_text = if let Some(shield_health) = self.shield_health() {
             if shield_health > 0 {
                 format!(", Shield: {}🛡️ ", shield_health)
-            }
-            else {
+            } else {
                 "".to_string()
             }
         } else {
@@ -94,8 +93,7 @@ pub trait Fighter {
         let armor_text = if let Some(armor_health) = self.armor_health() {
             if armor_health > 0 {
                 format!(", Armor : {}🪖 ", armor_health)
-            }
-            else {
+            } else {
                 "".to_string()
             }
         } else {
@@ -105,7 +103,7 @@ pub trait Fighter {
         #[cfg(feature = "slow")]
         std::thread::sleep(std::time::Duration::from_secs(1));
         println!(
-            "{} - Health: {}❤️ {}{}",
+            "[{} - Health: {}❤️ {}{}]",
             self.name(),
             self.health(),
             armor_text,

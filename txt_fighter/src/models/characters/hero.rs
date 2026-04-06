@@ -9,19 +9,22 @@ pub struct Hero {
     armor: u32,
     coins: u32,
     name: String,
+    weapon: Item,
     state: Vec<StatusEffect>,
 }
 
 impl Hero {
     const BASE_HEALTH: u32 = 100;
+    const BASE_DAMAGE: u32 = 35;
     pub fn new() -> Self {
         Hero {
             health: Self::BASE_HEALTH,
-            damage: 35,
+            damage: Self::BASE_DAMAGE,
             shield_health: 75,
             armor: 10,
             coins: 0,
             name: String::from("Hero 🤴"),
+            weapon: Item::Weapon(String::from("Basic Sword"), Self::BASE_DAMAGE),
             state: Vec::new(),
         }
     }
@@ -39,7 +42,7 @@ impl Fighter for Hero {
     fn take_damage(&mut self, amount: i32) {
         if amount >= 0 {
             if self.armor > 0 {
-                let remaining_armor = self.armor as i32 - amount; 
+                let remaining_armor = self.armor as i32 - amount;
 
                 if remaining_armor < 0 {
                     self.armor = 0;
@@ -78,14 +81,15 @@ impl Fighter for Hero {
                 e.turns_remaining -= 1;
                 if e.damage_per_turn > 0 {
                     println!(
-                        "~ {} suffers {} {} damage ~",
+                        "> {} suffers {} {} damage <",
                         fighter_name, e.damage_per_turn, e.name
                     );
-                }
-                else {
+                } else {
                     println!(
-                        "~ {} gained {} HP using {} ~",
-                        fighter_name, (e.damage_per_turn).unsigned_abs(), e.name
+                        "> {} gained {} HP using {} <",
+                        fighter_name,
+                        (e.damage_per_turn).unsigned_abs(),
+                        e.name
                     );
                 }
                 e.damage_per_turn
@@ -134,7 +138,12 @@ impl Fighter for Hero {
                 Item::Potion(effect) => self.add_effect(effect),
                 Item::Armor(amount) => self.armor += amount,
                 Item::Shield(amount) => self.shield_health += amount,
-                _ => (),
+                Item::Weapon(name, damage) => {
+                    if damage > self.damage {
+                        self.damage = damage;
+                        self.weapon = Item::Weapon(name, damage);
+                    }
+                },
             }
         }
     }

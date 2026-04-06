@@ -1,43 +1,53 @@
 use crate::models::ai::{Action, Ai};
 use crate::models::fighter::Fighter;
-use crate::models::item::{Drop, Item};
-use crate::models::types::{AttackResult, SpecialAttackInfo, StatusEffect};
+use crate::models::types::{AttackResult, SpecialAttackInfo};
+use crate::models::{Item, item::Drop};
 
-pub struct Goblin {
+pub struct Troll {
     health: u32,
     damage: u32,
-    poison_damage: u32,
-    poison_turns: u32,
-    uses: u32,
     name: String,
+    throw_damage: u32,
+    uses: u32,
     drops: Vec<Drop>,
 }
 
-impl Goblin {
-    const BASE_HEALTH: u32 = 50;
+impl Troll {
+    const BASE_HEALTH: u32 = 90;
     pub fn new() -> Self {
-        Goblin {
+        Troll {
             health: Self::BASE_HEALTH,
             damage: 20,
-            poison_damage: 10,
-            poison_turns: 3,
+            name: String::from("Troll 🧌 "),
+            throw_damage: 40,
             uses: 1,
-            name: String::from("Goblin 👺"),
             drops: vec![
                 Drop {
-                    item: Item::Coins(10),
-                    chance: 0.5,
+                    item: Item::Coins(20),
+                    chance: 1.0,
+                },
+                Drop {
+                    item: Item::Coins(50),
+                    chance: 0.25,
+                },
+                Drop {
+                    item: Item::Shield(40),
+                    chance: 0.50,
                 },
                 Drop {
                     item: Item::healing_potion_1(),
                     chance: 0.75,
+                },
+                Drop {
+                    item: Item::healing_potion_2(),
+                    chance: 0.25,
                 },
             ],
         }
     }
 }
 
-impl Fighter for Goblin {
+impl Fighter for Troll {
     fn attack(&self) -> u32 {
         self.damage
     }
@@ -62,13 +72,9 @@ impl Fighter for Goblin {
         if self.uses > 0 {
             self.uses -= 1;
             return Some(AttackResult {
-                name: "Poison Dart 🧪".to_string(),
-                damage: 0,
-                effect: Some(StatusEffect {
-                    name: String::from("Poison"),
-                    damage_per_turn: self.poison_damage as i32,
-                    turns_remaining: self.poison_turns,
-                }),
+                name: "Flying Boulder 🪨 ".to_string(),
+                damage: self.throw_damage as i32,
+                effect: None,
             });
         }
         None
@@ -76,8 +82,8 @@ impl Fighter for Goblin {
 
     fn special_attack_info(&self) -> Option<SpecialAttackInfo> {
         Some(SpecialAttackInfo {
-            name: "Poison Dart 🧪".to_string(),
-            damage: self.poison_damage,
+            name: "Flying Boulder 🪨 ".to_string(),
+            damage: self.throw_damage,
         })
     }
 
@@ -102,22 +108,12 @@ impl Fighter for Goblin {
     }
 }
 
-impl Ai for Goblin {
+impl Ai for Troll {
     /// Decides whether to use a special attack or a normal attack based on the following criteria:
     /// 1. If the special attack resource is empty, use a normal attack.
-    /// 2. If the opponent is poisoned, use a normal attack.
-    fn choose_action(&self, opponent: &dyn Fighter) -> Action {
+    fn choose_action(&self, _opponent: &dyn Fighter) -> Action {
         // 1: Can do special attack? else Normal Attack
         if self.uses == 0 {
-            return Action::NormalAttack;
-        }
-
-        // 2: Is the opponent poisoned?
-        if opponent
-            .list_effects()
-            .iter()
-            .any(|e| e.name.eq_ignore_ascii_case("poison"))
-        {
             return Action::NormalAttack;
         }
 

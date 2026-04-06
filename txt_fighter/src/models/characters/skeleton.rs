@@ -21,12 +21,16 @@ impl Skeleton {
                     chance: 0.66,
                 },
                 Drop {
-                    item: Item::Shield(40),
+                    item: Item::Shield(25),
                     chance: 0.50,
                 },
                 Drop {
                     item: Item::healing_potion_1(),
                     chance: 0.50,
+                },
+                Drop {
+                    item: Item::Weapon(String::from("Bone Sword"), 40),
+                    chance: 1.0,
                 },
             ],
         }
