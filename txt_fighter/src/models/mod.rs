@@ -1,8 +1,8 @@
 pub mod ai;
 pub mod characters;
 pub mod fighter;
-pub mod types;
 pub mod item;
+pub mod types;
 
 // Re-exports
 pub use characters::{Dragon, Goblin, Hero};

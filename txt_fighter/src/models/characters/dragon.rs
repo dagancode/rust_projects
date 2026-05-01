@@ -47,7 +47,7 @@ impl Fighter for Dragon {
         if self.uses > 0 {
             self.uses -= 1;
             return Some(AttackResult {
-                name: "Fireball".to_string(),
+                name: "Fireball 🔥".to_string(),
                 damage: self.fireball_damage as i32,
                 effect: None,
             });
@@ -57,7 +57,7 @@ impl Fighter for Dragon {
 
     fn special_attack_info(&self) -> Option<SpecialAttackInfo> {
         Some(SpecialAttackInfo {
-            name: "Fireball".to_string(),
+            name: "Fireball 🔥".to_string(),
             damage: self.fireball_damage,
         })
     }

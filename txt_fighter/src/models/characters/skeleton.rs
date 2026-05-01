@@ -14,19 +14,23 @@ impl Skeleton {
         Skeleton {
             health: Self::BASE_HEALTH,
             damage: 25,
-            name: String::from("Skeleton 🩻"),
+            name: String::from("Skeleton 🩻 "),
             drops: vec![
                 Drop {
                     item: Item::Coins(15),
                     chance: 0.66,
                 },
                 Drop {
-                    item: Item::Shield(40),
+                    item: Item::Shield(25),
                     chance: 0.50,
                 },
                 Drop {
                     item: Item::healing_potion_1(),
                     chance: 0.50,
+                },
+                Drop {
+                    item: Item::Weapon(String::from("Bone Sword"), 40),
+                    chance: 1.0,
                 },
             ],
         }

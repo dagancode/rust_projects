@@ -25,9 +25,10 @@ pub fn start() {
     match select_mode() {
         GameMode::Campaign => {
             let mut hero = Hero::new();
-            let enemies:Vec<Box<dyn Fighter>> = campaign_enemies();
+            let enemies: Vec<Box<dyn Fighter>> = campaign_enemies();
 
             for mut enemy in enemies {
+                println!("~|[{}]|~", enemy.name());
                 game_loop(enemy.as_mut(), &mut hero);
 
                 if !hero.is_alive() {
@@ -37,12 +38,13 @@ pub fn start() {
         }
         GameMode::RandomBattle => {
             let mut hero = Hero::new();
-            let mut enemies:Vec<Box<dyn Fighter>> = campaign_enemies();
+            let mut enemies: Vec<Box<dyn Fighter>> = campaign_enemies();
 
             let random = rng().random_range(0..enemies.len());
 
             let random_enemy: &mut Box<dyn Fighter> = &mut enemies[random];
 
+            println!("~|[{}]|~", random_enemy.name());
             game_loop(random_enemy.as_mut(), &mut hero);
         }
     }
@@ -52,13 +54,15 @@ pub fn start() {
 fn select_mode() -> GameMode {
     let mut user_input = String::new();
 
-    println!("Select a game mode:\n1. Campaign\n2. Random Battle");
+    println!("Select a game mode:\n1. Campaign\n2. Random Battle\n");
+    print!("> Mode: ");
     io::stdout().flush().unwrap();
 
     io::stdin()
         .read_line(&mut user_input)
         .expect("Failed to read line");
 
+    println!();
     match user_input.trim().to_lowercase().as_str() {
         "1" => GameMode::Campaign,
         "2" => GameMode::RandomBattle,
@@ -76,7 +80,9 @@ enum GameMode {
 fn campaign_enemies() -> Vec<Box<dyn Fighter>> {
     let goblin = Box::new(Goblin::new());
     let skeleton = Box::new(Skeleton::new());
+    let goblin_2 = Box::new(Goblin::new());
+    let troll = Box::new(Troll::new());
     let dragon = Box::new(Dragon::new());
 
-    vec![goblin, skeleton, dragon]
+    vec![goblin, skeleton, goblin_2, troll, dragon]
 }

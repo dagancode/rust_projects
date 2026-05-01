@@ -7,7 +7,6 @@ pub struct StatusEffect {
     pub(crate) turns_remaining: u32,
 }
 
-#[derive(Default)]
 pub struct AttackResult {
     pub name: String,
     pub damage: i32,
@@ -18,4 +17,14 @@ pub struct AttackResult {
 pub struct SpecialAttackInfo {
     pub name: String,
     pub damage: u32,
+}
+
+impl Default for AttackResult {
+    fn default() -> Self {
+        AttackResult {
+            name: String::from("Basic Attack"),
+            damage: 0,
+            effect: None,
+        }
+    }
 }

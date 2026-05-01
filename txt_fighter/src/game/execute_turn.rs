@@ -21,6 +21,8 @@ pub fn execute_turn(attacker: &mut dyn Fighter, defender: &mut dyn Fighter) -> b
         Action::NormalAttack => AttackResult::default(),
     };
 
+    println!("~~ {}  used {} ~~", attacker.name(), special_attack.name);
+
     let shielded_damage = defender
         .shield_attack(base_damage + special_attack.damage as u32)
         .unwrap_or(0);
@@ -29,7 +31,7 @@ pub fn execute_turn(attacker: &mut dyn Fighter, defender: &mut dyn Fighter) -> b
     defender.take_damage(total_damage as i32);
 
     println!(
-        "{} took {}/{} damage from {}\n",
+        "> {} took {}/{} damage from {} <\n",
         defender.name(),
         total_damage,
         base_damage + special_attack.damage as u32,
@@ -52,6 +54,10 @@ pub fn execute_turn(attacker: &mut dyn Fighter, defender: &mut dyn Fighter) -> b
     std::thread::sleep(std::time::Duration::from_secs(1));
     if shielded_damage > 0 {
         println!("~ Shield blocked {} damage ~", shielded_damage)
+    }
+
+    if special_attack.damage > 0 || shielded_damage > 0 {
+        println!("");
     }
 
     attacker.display();
