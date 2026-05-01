@@ -1,0 +1,18 @@
+[package]
+name = "property_analysis"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+# Domain types
+uuid = { version = "1", features = ["v4", "serde"] }
+rust_decimal = { version = "1", features = ["serde-with-str"] }
+
+# Serialisation
+serde = { version = "1", features = ["derive"] }
+
+# Data loading
+csv = "1"
+
+# Configuration
+dotenvy = "0.15"
