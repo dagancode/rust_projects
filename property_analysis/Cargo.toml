@@ -6,13 +6,23 @@ edition = "2021"
 [dependencies]
 # Domain types
 uuid = { version = "1", features = ["v4", "serde"] }
-rust_decimal = { version = "1", features = ["serde-with-str"] }
+rust_decimal = { version = "1.42.0", features = ["serde-with-str"] }
 
 # Serialisation
 serde = { version = "1", features = ["derive"] }
+serde_json = { version = "1" }
 
 # Data loading
 csv = "1"
 
 # Configuration
 dotenvy = "0.15"
+
+# Async
+tokio = { "version" = "1.52.3", features = ["full"] }
+
+# HTTP framework
+axum = "0.8.9"
+
+# Error handling
+thiserror = "2.0.18"

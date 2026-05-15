@@ -3,10 +3,12 @@ use std::collections::HashMap;
 use csv::Reader;
 use uuid::Uuid;
 
-use crate::models::domain::*;
 use crate::models::csv::SalesRecord;
+use crate::models::domain::*;
 
-pub fn load_sales_history(file_path: &str) -> Result<Vec<PropertyDetail>, Box<dyn std::error::Error>> {
+pub fn load_sales_history(
+    file_path: &str,
+) -> Result<Vec<PropertyDetail>, Box<dyn std::error::Error>> {
     let mut property_sales: HashMap<Location, Vec<PropertySale>> = HashMap::new();
 
     let mut reader = Reader::from_path(file_path).expect("Should have been able to read the CSV");
