@@ -1,7 +1,7 @@
 use axum::{
-    extract::{Path, State},
-    Json,
+    Json, extract::{Path, State}, http::StatusCode
 };
+use tracing::debug;
 
 use crate::models::{app::AppState, domain::PropertyDetail, error::ApiError};
 
@@ -18,9 +18,11 @@ pub async fn get_suburb_sales_history(
                 .collect();
 
             if result.is_empty() {
+                debug!("{} -> {}", format!("GET /sales-history/suburb/{suburb}"), StatusCode::NOT_FOUND);
                 return Err(ApiError::NotFound);
             }
 
+            debug!("{} -> {}", format!("GET /sales-history/suburb/{suburb}"), StatusCode::OK);
             Ok(Json(result))
         }
 

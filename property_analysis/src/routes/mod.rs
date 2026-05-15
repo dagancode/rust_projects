@@ -1,4 +1,4 @@
 pub mod health;
-pub mod suburbs;
+pub mod v1;
 
-pub use suburbs::get_suburb_sales_history;
+pub use v1::sales_history;

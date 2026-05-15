@@ -23,12 +23,12 @@ pub fn load_sales_history(
         };
 
         let location = Location {
-            street_number: result.street_number,
-            street_name: result.street_name,
-            neighbourhood: result.neighbourhood,
-            suburb: result.suburb,
-            city: result.city,
-            province: result.province,
+            street_number: result.street_number.to_lowercase(),
+            street_name: result.street_name.to_lowercase(),
+            neighbourhood: result.neighbourhood.to_lowercase(),
+            suburb: result.suburb.to_lowercase(),
+            city: result.city.to_lowercase(),
+            province: result.province.to_lowercase(),
             source_url: result.source_url,
         };
 

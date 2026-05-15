@@ -22,7 +22,11 @@ dotenvy = "0.15"
 tokio = { "version" = "1.52.3", features = ["full"] }
 
 # HTTP framework
-axum = "0.8.9"
+axum = { "version" = "0.8.9", features = ["macros"]}
 
 # Error handling
 thiserror = "2.0.18"
+
+# Logging
+tracing = "0.1.44"
+tracing-subscriber = {"version" = "0.3.23", features = ["env-filter"]}
