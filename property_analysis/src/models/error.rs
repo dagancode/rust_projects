@@ -1,4 +1,5 @@
-use axum::{http::StatusCode, response::IntoResponse};
+use axum::{http::StatusCode, response::IntoResponse, Json};
+use serde_json::json;
 
 #[derive(Debug, Clone, Copy, thiserror::Error)]
 pub enum ApiError {
@@ -12,14 +13,12 @@ pub enum ApiError {
 
 impl IntoResponse for ApiError {
     fn into_response(self) -> axum::response::Response {
-        match self {
-            Self::NotFound => (StatusCode::NOT_FOUND, self.to_string()).into_response(),
-            Self::ParseError => {
-                (StatusCode::INTERNAL_SERVER_ERROR, self.to_string()).into_response()
-            }
-            Self::PoisonedLock => {
-                (StatusCode::INTERNAL_SERVER_ERROR, self.to_string()).into_response()
-            }
-        }
+        let status = match self {
+            Self::NotFound => StatusCode::NOT_FOUND,
+            Self::ParseError => StatusCode::INTERNAL_SERVER_ERROR,
+            Self::PoisonedLock => StatusCode::INTERNAL_SERVER_ERROR,
+        };
+
+        (status, Json(json!({"error": self.to_string()}))).into_response()
     }
 }

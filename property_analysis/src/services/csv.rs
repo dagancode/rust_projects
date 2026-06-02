@@ -1,9 +1,11 @@
 use std::collections::HashMap;
 
 use csv::Reader;
+use rust_decimal::Decimal;
+use tracing::{error, info};
 use uuid::Uuid;
 
-use crate::models::csv::SalesRecord;
+use crate::models::csv::{ListingsRecord, SalesRecord};
 use crate::models::domain::*;
 
 pub fn load_sales_history(
@@ -11,7 +13,7 @@ pub fn load_sales_history(
 ) -> Result<Vec<PropertyDetail>, Box<dyn std::error::Error>> {
     let mut property_sales: HashMap<Location, Vec<PropertySale>> = HashMap::new();
 
-    let mut reader = Reader::from_path(file_path).expect("Should have been able to read the CSV");
+    let mut reader = Reader::from_path(file_path)?;
 
     for row in reader.deserialize() {
         let result: SalesRecord = row?;
@@ -52,5 +54,83 @@ pub fn load_sales_history(
         })
         .collect();
 
+    info!("Loaded {} property sales.", results.len());
     Ok(results)
+}
+
+pub fn load_listings(file_path: &str) -> Result<Vec<PropertyListing>, Box<dyn std::error::Error>> {
+    let mut results = Vec::new();
+
+    let mut reader = Reader::from_path(file_path)?;
+
+    for row in reader.deserialize() {
+        results.push(parse_listings_record(row?));
+    }
+
+    info!("Loaded {} property listings.", results.len());
+    Ok(results)
+}
+
+/// This function does not return any parsing errors, it will return default values if parsing fails.
+pub fn parse_listings_record(record: ListingsRecord) -> PropertyListing {
+    PropertyListing {
+        source_url: record.source_url,
+        title: record.title.to_lowercase(),
+        price: record.price,
+        address: record.address.to_lowercase(),
+        //listing_number: record.listing_number,
+        property_type: PropertyType::from(record.property_type.to_ascii_lowercase().as_str()),
+        listing_date: ListingDate::from(record.listing_date.as_str()),
+        erf_size_m2: record.erf_size_m2.and_then(|v| v.parse::<u32>().ok()),
+        floor_size_m2: record.floor_size_m2.and_then(|v| v.parse::<u32>().ok()),
+        price_per_m2: record.price_per_m2.and_then(|v| v.parse::<Decimal>().ok()),
+        levies: record.levies.and_then(|v| v.parse::<Decimal>().ok()),
+        rates_and_taxes: record
+            .rates_and_taxes
+            .and_then(|v| v.parse::<Decimal>().ok()),
+        bedrooms: record.bedrooms,
+        bedroom_detail: record.bedroom_detail,
+        bathrooms: record.bathrooms,
+        kitchens: record.kitchens,
+        lounges: record.lounges,
+        dining_rooms: record.dining_rooms,
+        parking: record.parking,
+        garage: record.garage,
+        pool: record.pool,
+        garden: record.garden,
+        pet_friendly: record.pet_friendly,
+        facing: record.facing,
+        roof: record.roof,
+        wall: record.wall,
+        floor: record.floor,
+        internet_access: record.internet_access,
+        key_features: record.key_features,
+    }
+}
+
+pub fn load_sales_history_csv_files(path: &str) -> Result<Vec<PropertyDetail>, Box<dyn std::error::Error>> {
+    match std::fs::read_dir(path) {
+        Ok(mut f) => {
+            let csv_files: Vec<_> = f.by_ref().filter(|d| d.as_ref().unwrap().path().extension().unwrap_or_default().eq_ignore_ascii_case("csv")).collect();
+            info!("Found {} CSV files.", csv_files.len());
+            
+            let mut results: Vec<PropertyDetail> = Vec::new();
+
+            for entry in csv_files {
+                let dir = entry?;
+                match dir.path().extension().unwrap_or_default().eq_ignore_ascii_case("csv") {
+                    true => {
+                        results.extend_from_slice(&load_sales_history(&dir.path().to_string_lossy())?);
+                    },
+                    false => error!("error opening directory"),
+                }
+            }
+
+            Ok(results)
+        },
+        Err(e) => {
+            error!("Unable to load any CSV files in the path: {path}");
+            Err(Box::new(e))
+        },
+    }
 }

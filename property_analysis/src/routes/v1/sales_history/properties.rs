@@ -2,9 +2,10 @@ use axum::{
     Json, extract::{Query, State}, http::StatusCode
 };
 use serde::{Deserialize, Serialize};
-use tracing::{debug, warn};
+use tracing::{debug};
 
 use crate::models::{app::AppState, domain::PropertyDetail, error::ApiError};
+use crate::routes::v1::utils::read_lock_handler;
 
 #[derive(Clone, Serialize, Deserialize)]
 pub struct PropertyRequest {
@@ -23,18 +24,8 @@ pub async fn get_property_sales_history(
     let street = property_request.street.to_lowercase();
     let number = property_request.number.to_lowercase();
 
-    let guard = match state.sales_history.read() {
-        Ok(lock) => lock,
-        Err(poison_error) => {
-            let lock = poison_error.into_inner();
-            warn!(
-                "Lock was poisoned - recovering from last stable state ({} items)",
-                lock.len()
-            );
-
-            lock
-        }
-    };
+    let lock = state.sales_history.clone();
+    let guard = read_lock_handler(&lock);
 
     let result: Vec<PropertyDetail> = guard
         .iter()
@@ -58,6 +49,6 @@ pub async fn get_property_sales_history(
         return Err(ApiError::NotFound);
     }
 
-    debug!("GET /sales-history/suburb/{suburb} -> {}", StatusCode::OK);
+    debug!("GET /sales-history/properties?suburb:{suburb}&street:{street}&number:{number} -> {}", StatusCode::OK);
     Ok(Json(result))
 }

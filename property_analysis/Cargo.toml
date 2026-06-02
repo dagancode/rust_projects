@@ -5,12 +5,12 @@ edition = "2021"
 
 [dependencies]
 # Domain types
-uuid = { version = "1", features = ["v4", "serde"] }
-rust_decimal = { version = "1.42.0", features = ["serde-with-str"] }
+uuid = { version = "1.23.2", features = ["v4", "serde"] }
+rust_decimal = { version = "1.42.0", features = ["serde-with-str", "macros"] }
 
 # Serialisation
 serde = { version = "1", features = ["derive"] }
-serde_json = { version = "1" }
+serde_json = { version = "1.0.150" }
 
 # Data loading
 csv = "1"

@@ -1,0 +1,26 @@
+### Health check
+GET http://localhost:3000/health
+
+### Full Sales history for Brackenfell South (Filter years)
+GET http://localhost:3000/v1/sales-history/suburbs/brackenfell?from=2025&to=2026
+Accept: application/json
+
+### Specific Property Search
+GET http://localhost:3000/v1/sales-history/properties?suburb=brackenfell&street=crammix&number=1
+Accept: application/json
+
+### Suburb Trend Analysis
+GET http://localhost:3000/v1/analysis/suburbs/brackenfell/trends?from=2018&to=2024
+Accept: application/json
+
+### Suburb Aggregate Analysis
+GET http://localhost:3000/v1/analysis/suburbs/brackenfell/aggregate
+Accept: application/json
+
+### Suburb Aggregate Analysis
+GET http://localhost:3000/v1/listings?suburb=brackenfell
+Accept: application/json
+###
+GET http://localhost:3000/v1/listings?suburb=brackenfell&property_type=house
+Accept: application/json
+
