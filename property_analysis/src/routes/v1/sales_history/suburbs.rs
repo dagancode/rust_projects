@@ -1,13 +1,20 @@
 use axum::{
     extract::{Path, Query, State},
     http::StatusCode,
+    response::IntoResponse,
     Json,
 };
 use tracing::debug;
 
 use crate::{
-    models::{app::AppState, domain::PropertyDetail, error::ApiError, helpers::RangeQuery},
-    routes::v1::utils::{apply_sales_history_range_query, read_lock_handler},
+    models::{
+        api::{ApiResponse, MetaData},
+        app::AppState,
+        domain::PropertyDetail,
+        error::ApiError,
+        filters::{RangeFilter, RangeQuery},
+    },
+    routes::v1::utils::read_lock_handler,
 };
 
 // GET /sales-history/suburb/{suburb}?from=2018&to=2024
@@ -15,17 +22,17 @@ pub async fn get_suburb_sales_history(
     Path(suburb): Path<String>,
     Query(range): Query<RangeQuery>,
     State(state): State<AppState>,
-) -> Result<Json<Vec<PropertyDetail>>, ApiError> {
+) -> impl IntoResponse {
     let lock = state.sales_history.clone();
     let guard = read_lock_handler(&lock);
 
-    let mut result: Vec<PropertyDetail> = guard
+    let result: Vec<PropertyDetail> = guard
         .iter()
         .filter(|val| val.property.location.suburb.eq_ignore_ascii_case(&suburb))
         .cloned()
         .collect();
 
-    result = apply_sales_history_range_query(result, range);
+    let result = result.apply_range_filter(range);
 
     if result.is_empty() {
         debug!(
@@ -36,5 +43,10 @@ pub async fn get_suburb_sales_history(
     }
 
     debug!("GET /sales-history/suburbs/{suburb} -> {}", StatusCode::OK);
-    Ok(Json(result))
+    let count = result.len() as u32;
+
+    Ok(Json(ApiResponse {
+        data: result,
+        meta: Some(MetaData { count }),
+    }))
 }

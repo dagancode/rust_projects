@@ -9,6 +9,8 @@ pub enum ApiError {
     ParseError,
     #[error("lock has been poisoned")]
     PoisonedLock,
+    #[error("one or more request values are invalid")]
+    BadRequest,
 }
 
 impl IntoResponse for ApiError {
@@ -17,6 +19,7 @@ impl IntoResponse for ApiError {
             Self::NotFound => StatusCode::NOT_FOUND,
             Self::ParseError => StatusCode::INTERNAL_SERVER_ERROR,
             Self::PoisonedLock => StatusCode::INTERNAL_SERVER_ERROR,
+            Self::BadRequest => StatusCode::BAD_REQUEST,
         };
 
         (status, Json(json!({"error": self.to_string()}))).into_response()

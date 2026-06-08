@@ -4,11 +4,14 @@ use axum::{
     response::IntoResponse,
     Json,
 };
-use serde_json::json;
 use tracing::debug;
 
 use crate::{
-    models::app::AppState, routes::v1::utils::read_lock_handler,
+    models::{
+        api::ApiResponse,
+        app::AppState, error::ApiError,
+    },
+    routes::v1::utils::read_lock_handler,
     services::analysis::aggregate_analysis::suburb_aggregate_analysis,
 };
 
@@ -23,16 +26,14 @@ pub async fn get_suburb_aggregate_analysis(
     match suburb_aggregate_analysis(&suburb, &guard) {
         Some(result) => {
             debug!(
-                "GET /analysis/trends/suburbs/{suburb} -> {}",
+                "GET /analysis/suburbs/{suburb}/aggregate -> {}",
                 StatusCode::OK
             );
-            Ok(Json(result))
+            Ok(Json(ApiResponse {
+                data: result,
+                meta: None,
+            }))
         }
-        None => Err((
-            StatusCode::NOT_FOUND,
-            Json(json!({
-                "error": "suburb not found"
-            })),
-        )),
+        None => Err(ApiError::NotFound),
     }
 }

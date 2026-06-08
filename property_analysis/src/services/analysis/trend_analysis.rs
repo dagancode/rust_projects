@@ -2,30 +2,36 @@ use std::collections::HashMap;
 
 use rust_decimal::prelude::Decimal;
 
-use tracing::debug;
-
-use crate::{models::{
+use crate::models::{
     analysis::{Sales, SuburbTrendAnalysis},
     domain::PropertyDetail,
-    helpers::RangeQuery,
-}, routes::v1::utils::apply_sales_history_range_query};
+    error::ApiError,
+    filters::RangeFilter,
+    filters::RangeQuery,
+};
 
 pub fn suburb_trend_analysis(
     suburb: &str,
     properties: &[PropertyDetail],
     range: RangeQuery,
-) -> SuburbTrendAnalysis {
+) -> Result<SuburbTrendAnalysis, ApiError> {
     let mut sales_map: HashMap<u16, Vec<Decimal>> = HashMap::new();
 
-    let mut filtered_properties: Vec<PropertyDetail> = properties
+    let filtered_properties: Vec<PropertyDetail> = properties
         .iter()
         .filter(|p| p.property.location.suburb.eq_ignore_ascii_case(suburb))
         .cloned()
         .collect();
 
-    filtered_properties = apply_sales_history_range_query(filtered_properties, range);
+    if filtered_properties.is_empty() {
+        return Err(ApiError::NotFound);
+    }
 
-    debug!("Filtered properties: {:?}", filtered_properties.len());
+    let filtered_properties = filtered_properties.apply_range_filter(range);
+
+    if filtered_properties.is_empty() {
+        return Err(ApiError::NotFound);
+    }
 
     for property in filtered_properties.iter() {
         let sales = &property.sales_history;
@@ -51,8 +57,8 @@ pub fn suburb_trend_analysis(
 
     sales.sort();
 
-    SuburbTrendAnalysis {
+    Ok(SuburbTrendAnalysis {
         suburb_name: suburb.to_string(),
         sales,
-    }
+    })
 }

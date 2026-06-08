@@ -1,13 +1,17 @@
 use axum::{
-    Json, extract::{State, Query}, http::StatusCode
+    extract::{Query, State},
+    http::StatusCode,
+    response::IntoResponse,
+    Json,
 };
 use serde::{Deserialize, Serialize};
 use tracing::debug;
 
 use crate::{
     models::{
+        api::{ApiResponse, MetaData},
         app::AppState,
-        domain::{PropertyListing, PropertyType},
+        domain::PropertyType,
         error::ApiError,
     },
     routes::v1::utils::read_lock_handler,
@@ -24,18 +28,26 @@ pub struct ListingsQuery {
 pub async fn get_listings(
     Query(query): Query<ListingsQuery>,
     State(state): State<AppState>,
-) -> Result<Json<Vec<PropertyListing>>, ApiError> {
+) -> impl IntoResponse {
     let lock = state.property_listings.clone();
     let guard = read_lock_handler(&lock);
 
     let mut result = guard.clone();
 
     if let Some(suburb_query) = &query.suburb {
-        result.retain(|p| p.address.to_ascii_lowercase().contains(&suburb_query.to_ascii_lowercase()));
+        result.retain(|p| {
+            p.address
+                .to_ascii_lowercase()
+                .contains(&suburb_query.to_ascii_lowercase())
+        });
     }
 
     if let Some(property_type_query) = &query.property_type {
-        result.retain(|p| p.property_type.eq(&PropertyType::from(property_type_query.to_ascii_lowercase().as_str())));
+        result.retain(|p| {
+            p.property_type.eq(&PropertyType::from(
+                property_type_query.to_ascii_lowercase().as_str(),
+            ))
+        });
     }
 
     if result.is_empty() {
@@ -44,6 +56,10 @@ pub async fn get_listings(
     }
 
     debug!("/v1/listings -> {}", StatusCode::OK);
+    let count = result.len() as u32;
 
-    Ok(Json(result))
+    Ok(Json(ApiResponse {
+        data: result,
+        meta: Some(MetaData { count }),
+    }))
 }

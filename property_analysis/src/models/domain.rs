@@ -2,7 +2,7 @@ use rust_decimal::Decimal;
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
-use crate::models::helpers::RangeQuery;
+use crate::models::{filters::RangeFilter, filters::RangeQuery};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Property {
@@ -130,19 +130,72 @@ impl From<&str> for ListingDate {
     }
 }
 
-impl PropertyDetail {
-    fn apply_range_query(
-        mut sales: Vec<Self>,
-        range: RangeQuery,
-    ) -> Vec<PropertyDetail> {
-        if let Some(from_year_query) = range.from_year {
-            sales.retain(|p| p.sales_history.iter().all(|s| s.year >= from_year_query));
-        };
+impl RangeFilter for Vec<PropertyListing> {
+    fn apply_range_filter(mut self, range: RangeQuery) -> Self {
+        match range {
+            RangeQuery {
+                from_year: Some(from_year_query),
+                to_year: Some(to_year_query),
+            } => {
+                self.retain(|p| {
+                    p.listing_date.year >= from_year_query && p.listing_date.year <= to_year_query
+                });
 
-        if let Some(to_year_query) = range.to_year {
-            sales.retain(|p| p.sales_history.iter().all(|s| s.year <= to_year_query));
-        };
+                self
+            }
+            RangeQuery {
+                from_year: Some(from_year_query),
+                to_year: None,
+            } => {
+                self.retain(|p| p.listing_date.year >= from_year_query);
 
-        sales
+                self
+            }
+            RangeQuery {
+                from_year: None,
+                to_year: Some(to_year_query),
+            } => {
+                self.retain(|p| p.listing_date.year <= to_year_query);
+
+                self
+            }
+            _ => self,
+        }
+    }
+}
+
+impl RangeFilter for Vec<PropertyDetail> {
+    fn apply_range_filter(mut self, range: RangeQuery) -> Self {
+        match range {
+            RangeQuery {
+                from_year: Some(from_year_query),
+                to_year: Some(to_year_query),
+            } => {
+                self.retain(|p| {
+                    p.sales_history
+                        .iter()
+                        .all(|s| s.year >= from_year_query && s.year <= to_year_query)
+                });
+
+                self
+            }
+            RangeQuery {
+                from_year: Some(from_year_query),
+                to_year: None,
+            } => {
+                self.retain(|p| p.sales_history.iter().all(|s| s.year >= from_year_query));
+
+                self
+            }
+            RangeQuery {
+                from_year: None,
+                to_year: Some(to_year_query),
+            } => {
+                self.retain(|p| p.sales_history.iter().all(|s| s.year <= to_year_query));
+
+                self
+            }
+            _ => self,
+        }
     }
 }

@@ -1,10 +1,18 @@
 use axum::{
-    Json, extract::{Query, State}, http::StatusCode
+    extract::{Query, State},
+    http::StatusCode,
+    response::IntoResponse,
+    Json,
 };
 use serde::{Deserialize, Serialize};
-use tracing::{debug};
+use tracing::debug;
 
-use crate::models::{app::AppState, domain::PropertyDetail, error::ApiError};
+use crate::models::{
+    api::{ApiResponse, MetaData},
+    app::AppState,
+    domain::PropertyDetail,
+    error::ApiError,
+};
 use crate::routes::v1::utils::read_lock_handler;
 
 #[derive(Clone, Serialize, Deserialize)]
@@ -19,7 +27,7 @@ pub struct PropertyRequest {
 pub async fn get_property_sales_history(
     Query(property_request): Query<PropertyRequest>,
     State(state): State<AppState>,
-) -> Result<Json<Vec<PropertyDetail>>, ApiError> {
+) -> impl IntoResponse {
     let suburb = property_request.suburb.to_lowercase();
     let street = property_request.street.to_lowercase();
     let number = property_request.number.to_lowercase();
@@ -29,17 +37,13 @@ pub async fn get_property_sales_history(
 
     let result: Vec<PropertyDetail> = guard
         .iter()
-                .filter(|val| {
-                    val.property.location.suburb.eq(&suburb)
-                        && val.property.location.street_name.contains(&street)
-                        && val
-                            .property
-                            .location
-                            .street_number
-                            .eq(&number)
-                })
-                .cloned()
-                .collect();
+        .filter(|val| {
+            val.property.location.suburb.eq(&suburb)
+                && val.property.location.street_name.contains(&street)
+                && val.property.location.street_number.eq(&number)
+        })
+        .cloned()
+        .collect();
 
     if result.is_empty() {
         debug!(
@@ -49,6 +53,14 @@ pub async fn get_property_sales_history(
         return Err(ApiError::NotFound);
     }
 
-    debug!("GET /sales-history/properties?suburb:{suburb}&street:{street}&number:{number} -> {}", StatusCode::OK);
-    Ok(Json(result))
+    debug!(
+        "GET /sales-history/properties?suburb:{suburb}&street:{street}&number:{number} -> {}",
+        StatusCode::OK
+    );
+    let count = result.len() as u32;
+
+    Ok(Json(ApiResponse {
+        data: result,
+        meta: Some(MetaData { count }),
+    }))
 }

@@ -17,7 +17,7 @@ use property_analysis::routes::{
         properties::listings::get_listings,
     },
 };
-use property_analysis::services::csv::{load_listings, load_sales_history};
+use property_analysis::services::csv::load_listings;
 
 
 #[tokio::main]

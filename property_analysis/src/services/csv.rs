@@ -108,29 +108,38 @@ pub fn parse_listings_record(record: ListingsRecord) -> PropertyListing {
     }
 }
 
-pub fn load_sales_history_csv_files(path: &str) -> Result<Vec<PropertyDetail>, Box<dyn std::error::Error>> {
+pub fn load_sales_history_csv_files(
+    path: &str,
+) -> Result<Vec<PropertyDetail>, Box<dyn std::error::Error>> {
     match std::fs::read_dir(path) {
         Ok(mut f) => {
-            let csv_files: Vec<_> = f.by_ref().filter(|d| d.as_ref().unwrap().path().extension().unwrap_or_default().eq_ignore_ascii_case("csv")).collect();
+            let csv_files: Vec<_> = f
+                .by_ref()
+                .filter(|d| match d {
+                    Ok(entry) => entry
+                        .path()
+                        .extension()
+                        .unwrap_or_default()
+                        .eq_ignore_ascii_case("csv"),
+                    Err(_) => false,
+                })
+                .collect();
+
             info!("Found {} CSV files.", csv_files.len());
-            
+
             let mut results: Vec<PropertyDetail> = Vec::new();
 
             for entry in csv_files {
                 let dir = entry?;
-                match dir.path().extension().unwrap_or_default().eq_ignore_ascii_case("csv") {
-                    true => {
-                        results.extend_from_slice(&load_sales_history(&dir.path().to_string_lossy())?);
-                    },
-                    false => error!("error opening directory"),
-                }
+
+                results.extend_from_slice(&load_sales_history(&dir.path().to_string_lossy())?);
             }
 
             Ok(results)
-        },
+        }
         Err(e) => {
             error!("Unable to load any CSV files in the path: {path}");
             Err(Box::new(e))
-        },
+        }
     }
 }

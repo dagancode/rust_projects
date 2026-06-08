@@ -30,3 +30,4 @@ thiserror = "2.0.18"
 # Logging
 tracing = "0.1.44"
 tracing-subscriber = {"version" = "0.3.23", features = ["env-filter"]}
+chrono = "0.4.44"

@@ -7,3 +7,9 @@ pub struct RangeQuery {
     #[serde(rename = "to")]
     pub to_year: Option<u16>,
 }
+
+#[must_use]
+pub trait RangeFilter {
+    fn apply_range_filter(self, range: RangeQuery) -> Self;
+}
+
