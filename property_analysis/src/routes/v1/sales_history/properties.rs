@@ -32,7 +32,7 @@ pub async fn get_property_sales_history(
     let street = property_request.street.to_lowercase();
     let number = property_request.number.to_lowercase();
 
-    let lock = state.sales_history.clone();
+    let lock = state.data.sales_history.clone();
     let guard = read_lock_handler(&lock);
 
     let result: Vec<PropertyDetail> = guard
@@ -50,7 +50,10 @@ pub async fn get_property_sales_history(
             "GET /sales-history/suburb/{suburb} -> {}",
             StatusCode::NOT_FOUND
         );
-        return Err(ApiError::NotFound);
+        return Err(ApiError::NotFound(Some(format!(
+            "property not found: {} {} {}",
+            number, street, suburb
+        ))));
     }
 
     debug!(

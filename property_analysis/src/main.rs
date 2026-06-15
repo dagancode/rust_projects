@@ -1,8 +1,12 @@
 use std::sync::Arc;
 use std::sync::RwLock;
 
-use axum::{routing::get, Router};
+use axum::middleware;
+use axum::{routing::{get, post}, Router};
 use dotenvy::dotenv;
+use property_analysis::models::app::AppData;
+use property_analysis::routes::auth::jwt::post_create_access_token;
+use property_analysis::routes::auth::jwt::validate_token;
 use property_analysis::services::csv::load_sales_history_csv_files;
 use tracing::{debug, info};
 
@@ -10,15 +14,17 @@ use property_analysis::models::app::AppState;
 use property_analysis::routes::{
     health::get_health,
     v1::{
-        analysis::{aggregate::get_suburb_aggregate_analysis, trends::get_suburb_trend_analysis},
+        analysis::{
+            aggregate::get_suburb_aggregate_analysis, trends::get_suburb_trend_analysis,
+            value_signals::get_suburb_value_signals,
+        },
+        properties::listings::get_listings,
         sales_history::{
             properties::get_property_sales_history, suburbs::get_suburb_sales_history,
         },
-        properties::listings::get_listings,
     },
 };
 use property_analysis::services::csv::load_listings;
-
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -39,13 +45,19 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .expect("Failed to load path. SALES_HISTORY_PATH must be set in .env ");
     let property_listings_path = std::env::var("PROPERTY_LISTINGS_PATH")
         .expect("Failed to load path. PROPERTY_LISTINGS_PATH must be set in .env ");
+    let jwt_secret = std::env::var("JWT_SECRET").expect("JWT_SECRET must be set in .env");
 
     let sales_history = load_sales_history_csv_files(&sales_history_path)?;
     let property_listings = load_listings(&property_listings_path)?;
 
     let shared_app_state = AppState {
-        sales_history: Arc::new(RwLock::new(sales_history)),
-        property_listings: Arc::new(RwLock::new(property_listings)),
+        data: AppData {
+            sales_history: Arc::new(RwLock::new(sales_history)),
+            property_listings: Arc::new(RwLock::new(property_listings)),
+        },
+        encoding_key: jsonwebtoken::EncodingKey::from_secret(jwt_secret.as_bytes()),
+        decoding_key: jsonwebtoken::DecodingKey::from_secret(jwt_secret.as_bytes()),
+        jwt_secret,
     };
 
     let v1_routes = Router::new()
@@ -62,10 +74,16 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             "/analysis/suburbs/{suburb}/aggregate",
             get(get_suburb_aggregate_analysis),
         )
-        .route("/listings", get(get_listings));
+        .route(
+            "/analysis/suburbs/{suburb}/value-signals",
+            get(get_suburb_value_signals),
+        )
+        .route("/listings", get(get_listings))
+        .layer(middleware::from_fn_with_state(shared_app_state.clone(), validate_token));
 
     let app_router = Router::new()
         .route("/health", get(get_health))
+        .route("/auth/token", post(post_create_access_token))
         .nest("/v1", v1_routes)
         .with_state(shared_app_state);
 

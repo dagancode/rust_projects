@@ -11,7 +11,7 @@ use crate::{
     models::{
         api::{ApiResponse, MetaData},
         app::AppState,
-        domain::PropertyType,
+        domain::{PropertyListing, PropertyType},
         error::ApiError,
     },
     routes::v1::utils::read_lock_handler,
@@ -29,30 +29,35 @@ pub async fn get_listings(
     Query(query): Query<ListingsQuery>,
     State(state): State<AppState>,
 ) -> impl IntoResponse {
-    let lock = state.property_listings.clone();
+    if let Some(ref property_type_query) = query.property_type {
+        PropertyType::from(property_type_query.as_str()).validate_property_type_query()?
+    }
+
+    let lock = state.data.property_listings.clone();
     let guard = read_lock_handler(&lock);
 
-    let mut result = guard.clone();
-
-    if let Some(suburb_query) = &query.suburb {
-        result.retain(|p| {
-            p.address
-                .to_ascii_lowercase()
-                .contains(&suburb_query.to_ascii_lowercase())
-        });
-    }
-
-    if let Some(property_type_query) = &query.property_type {
-        result.retain(|p| {
-            p.property_type.eq(&PropertyType::from(
-                property_type_query.to_ascii_lowercase().as_str(),
-            ))
-        });
-    }
+    let result: Vec<PropertyListing> = guard
+        .iter()
+        .filter(|p| {
+            let suburb_match = query.suburb.as_ref().map_or(true, |s| {
+                p.address
+                    .to_ascii_lowercase()
+                    .contains(&s.to_ascii_lowercase())
+            });
+            let type_match = query.property_type.as_ref().map_or(true, |t| {
+                p.property_type
+                    .eq(&PropertyType::from(t.to_ascii_lowercase().as_str())) // FIX: PROP-7
+            });
+            suburb_match && type_match
+        })
+        .cloned()
+        .collect();
 
     if result.is_empty() {
         debug!("/v1/listings -> {}", StatusCode::NOT_FOUND);
-        return Err(ApiError::NotFound);
+        return Err(ApiError::NotFound(Some(format!(
+            "no property listings found"
+        ))));
     }
 
     debug!("/v1/listings -> {}", StatusCode::OK);

@@ -2,7 +2,7 @@ use rust_decimal::Decimal;
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
-use crate::models::{filters::RangeFilter, filters::RangeQuery};
+use crate::models::{error::ApiError, filters::RangeFilter, filters::RangeQuery};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Property {
@@ -34,7 +34,7 @@ pub struct PropertySale {
     pub price: Decimal,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, PartialOrd, Ord)]
 pub struct PropertyListing {
     pub source_url: String,
     pub title: String,
@@ -48,17 +48,17 @@ pub struct PropertyListing {
     pub price_per_m2: Option<Decimal>,
     pub levies: Option<Decimal>,
     pub rates_and_taxes: Option<Decimal>,
-    pub bedrooms: Option<u16>,
+    pub bedrooms: Option<u8>,
     pub bedroom_detail: Option<String>,
-    pub bathrooms: Option<String>,
-    pub kitchens: Option<String>,
-    pub lounges: Option<String>,
-    pub dining_rooms: Option<String>,
-    pub parking: Option<String>,
-    pub garage: Option<String>,
-    pub pool: Option<String>,
-    pub garden: Option<String>,
-    pub pet_friendly: Option<String>,
+    pub bathrooms: Option<u8>,
+    pub kitchens: Option<u8>,
+    pub lounges: Option<u8>,
+    pub dining_rooms: Option<u8>,
+    pub parking: Option<u8>,
+    pub garage: Option<u8>,
+    pub pool: Option<bool>,
+    pub garden: Option<bool>,
+    pub pet_friendly: Option<bool>,
     pub facing: Option<String>,
     pub roof: Option<String>,
     pub wall: Option<String>,
@@ -67,7 +67,7 @@ pub struct PropertyListing {
     pub key_features: Option<String>,
 }
 
-#[derive(Debug, Copy, Clone, Serialize, Deserialize, PartialEq, Eq, PartialOrd, Ord)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, PartialOrd, Ord)]
 pub enum PropertyType {
     Apartment,
     Commercial,
@@ -76,7 +76,7 @@ pub enum PropertyType {
     Townhouse,
     VacantLand,
     Farm,
-    Unknown,
+    Unknown(String),
 }
 
 #[derive(Debug, Copy, Clone, Serialize, Deserialize, PartialEq, Eq, PartialOrd, Ord)]
@@ -89,21 +89,30 @@ pub struct ListingDate {
 impl From<&str> for PropertyType {
     fn from(value: &str) -> PropertyType {
         match value {
-            "apartment" | "flat" => Self::Apartment,
-            "commercial" => Self::Commercial,
-            "industrial" => Self::Industrial,
+            "apartment" | "flat" | "apartment / flat" => Self::Apartment,
+            "commercial" | "commercial property" => Self::Commercial,
+            "industrial" | "industrial property" => Self::Industrial,
             "house" => Self::House,
             "townhouse" => Self::Townhouse,
-            "vacant" | "land" | "plot" => Self::VacantLand,
+            "vacant" | "land" | "plot" | "vacant land / plot" => Self::VacantLand,
             "farm" => Self::Farm,
-            _ => Self::Unknown,
+            _ => Self::Unknown(value.to_string()),
+        }
+    }
+}
+
+impl PropertyType {
+    pub fn validate_property_type_query(self) -> Result<(), ApiError> {
+        match self {
+            Self::Unknown(property_type) => Err(ApiError::ValidationError(Some(format!("invalid property_type '{}' - valid values: apartment, house, townhouse, commercial, industrial, plot, farm", property_type))).into()),
+            _ => Ok(())
         }
     }
 }
 
 impl std::fmt::Display for PropertyType {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
-        match *self {
+        match self {
             Self::Apartment => write!(f, "Apartment / Flat"),
             Self::Commercial => write!(f, "Commercial Property"),
             Self::Industrial => write!(f, "Industrial Property"),
@@ -111,7 +120,7 @@ impl std::fmt::Display for PropertyType {
             Self::Townhouse => write!(f, "Townhouse"),
             Self::VacantLand => write!(f, "Vacant Land / Plot"),
             Self::Farm => write!(f, "Farm"),
-            Self::Unknown => write!(f, "Unknown"),
+            Self::Unknown(property_type) => write!(f, "Unknown: {property_type}",),
         }
     }
 }

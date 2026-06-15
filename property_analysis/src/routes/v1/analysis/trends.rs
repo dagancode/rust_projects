@@ -22,7 +22,9 @@ pub async fn get_suburb_trend_analysis(
     Query(range): Query<RangeQuery>,
     State(state): State<AppState>,
 ) -> impl IntoResponse {
-    let lock = state.sales_history.clone();
+    range.validate_range_query()?;
+
+    let lock = state.data.sales_history.clone();
     let guard = read_lock_handler(&lock);
 
     match suburb_trend_analysis(suburb.as_str(), &guard, range) {

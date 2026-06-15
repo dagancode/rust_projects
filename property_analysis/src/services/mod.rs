@@ -1,2 +1,2 @@
-pub mod csv;
 pub mod analysis;
+pub mod csv;

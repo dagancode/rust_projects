@@ -1,2 +1,2 @@
-pub mod suburbs;
 pub mod properties;
+pub mod suburbs;

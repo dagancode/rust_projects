@@ -90,15 +90,21 @@ pub fn parse_listings_record(record: ListingsRecord) -> PropertyListing {
             .and_then(|v| v.parse::<Decimal>().ok()),
         bedrooms: record.bedrooms,
         bedroom_detail: record.bedroom_detail,
-        bathrooms: record.bathrooms,
-        kitchens: record.kitchens,
-        lounges: record.lounges,
-        dining_rooms: record.dining_rooms,
-        parking: record.parking,
-        garage: record.garage,
-        pool: record.pool,
-        garden: record.garden,
-        pet_friendly: record.pet_friendly,
+        bathrooms: record.bathrooms.and_then(|v| v.parse::<u8>().ok()),
+        kitchens: record.kitchens.and_then(|v| v.parse::<u8>().ok()),
+        lounges: record.lounges.and_then(|v| v.parse::<u8>().ok()),
+        dining_rooms: record.dining_rooms.and_then(|v| v.parse::<u8>().ok()),
+        parking: record.parking.and_then(|v| v.parse::<u8>().ok()),
+        garage: record.garage.and_then(|v| v.parse::<u8>().ok()),
+        pool: record
+            .pool
+            .map_or(None, |v| Some(v.eq_ignore_ascii_case("yes"))),
+        garden: record
+            .garden
+            .map_or(None, |v| Some(v.eq_ignore_ascii_case("yes"))),
+        pet_friendly: record
+            .pet_friendly
+            .map_or(None, |v| Some(v.eq_ignore_ascii_case("yes"))),
         facing: record.facing,
         roof: record.roof,
         wall: record.wall,

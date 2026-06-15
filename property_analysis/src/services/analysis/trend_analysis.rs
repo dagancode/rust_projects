@@ -24,13 +24,19 @@ pub fn suburb_trend_analysis(
         .collect();
 
     if filtered_properties.is_empty() {
-        return Err(ApiError::NotFound);
+        return Err(ApiError::NotFound(Some(format!(
+            "no properties found in suburb: {}",
+            suburb
+        ))));
     }
 
-    let filtered_properties = filtered_properties.apply_range_filter(range);
+    let filtered_properties = filtered_properties.apply_range_filter(range.clone());
 
     if filtered_properties.is_empty() {
-        return Err(ApiError::NotFound);
+        return Err(ApiError::NotFound(Some(format!(
+            "no properties found in suburb: {} for the selected range: ({:?} - {:?})",
+            suburb, range.from_year, range.to_year
+        ))));
     }
 
     for property in filtered_properties.iter() {

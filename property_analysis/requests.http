@@ -1,26 +1,68 @@
-### Health check
-GET http://localhost:3000/health
+@base_url = http://localhost:3000
+@access_token = eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJleHAiOjE3ODE0NjI5NjgsInN1YiI6ImFwaS1jbGllbnQifQ.jN8ted4G4zWK40WHbCDOj2Q21uYP5OPOT5c4gJJNxjw
 
-### Full Sales history for Brackenfell South (Filter years)
-GET http://localhost:3000/v1/sales-history/suburbs/brackenfell?from=2026&to=2026
+# ─────────────────────────────────────────
+# AUTH
+# ─────────────────────────────────────────
+
+### Create Access Token
+POST {{base_url}}/auth/token
+Content-Type: application/json
+
+{
+    "secret": "FEEDBEEFFEEDBEEFFEEDBEEFFEEDBEEF"
+}
+
+# ─────────────────────────────────────────
+# HEALTH
+# ─────────────────────────────────────────
+
+### Health Check
+GET {{base_url}}/health
+
+# ─────────────────────────────────────────
+# SALES HISTORY
+# ─────────────────────────────────────────
+
+### Full Sales History — Brackenfell (filtered by year)
+GET {{base_url}}/v1/sales-history/suburbs/brackenfell?from=2023&to=2026
 Accept: application/json
+Authorization: Bearer {{access_token}}
 
 ### Specific Property Search
-GET http://localhost:3000/v1/sales-history/properties?suburb=brackenfell&street=crammix&number=1
+GET {{base_url}}/v1/sales-history/properties?suburb=brackenfell&street=crammix&number=1
 Accept: application/json
+Authorization: Bearer {{access_token}}
+
+# ─────────────────────────────────────────
+# ANALYSIS
+# ─────────────────────────────────────────
 
 ### Suburb Trend Analysis
-GET http://localhost:3000/v1/analysis/suburbs/brackenfell/trends?from=2019&to=2024
+GET {{base_url}}/v1/analysis/suburbs/brackenfell/trends?from=2019&to=2024
 Accept: application/json
+Authorization: Bearer {{access_token}}
 
 ### Suburb Aggregate Analysis
-GET http://localhost:3000/v1/analysis/suburbs/brackenfell/aggregate
+GET {{base_url}}/v1/analysis/suburbs/brackenfell/aggregate
 Accept: application/json
+Authorization: Bearer {{access_token}}
 
-### Suburb Specific Listings
-GET http://localhost:3000/v1/listings?suburb=brackenfell
+### Suburb Value Signals
+GET {{base_url}}/v1/analysis/suburbs/brackenfell/value-signals
 Accept: application/json
-###
-GET http://localhost:3000/v1/listings?suburb=brackenfell&property_type=house
-Accept: application/json
+Authorization: Bearer {{access_token}}
 
+# ─────────────────────────────────────────
+# LISTINGS
+# ─────────────────────────────────────────
+
+### All Listings — Brackenfell
+GET {{base_url}}/v1/listings?suburb=brackenfell
+Accept: application/json
+Authorization: Bearer {{access_token}}
+
+### Listings — Brackenfell, Houses Only
+GET {{base_url}}/v1/listings?suburb=brackenfell&property_type=house
+Accept: application/json
+Authorization: Bearer {{access_token}}

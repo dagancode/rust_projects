@@ -28,7 +28,7 @@ pub struct ListingsRecord {
     pub price_per_m2: Option<String>,
     pub levies: Option<String>,
     pub rates_and_taxes: Option<String>,
-    pub bedrooms: Option<u16>,
+    pub bedrooms: Option<u8>,
     pub bedroom_detail: Option<String>,
     pub bathrooms: Option<String>,
     pub kitchens: Option<String>,

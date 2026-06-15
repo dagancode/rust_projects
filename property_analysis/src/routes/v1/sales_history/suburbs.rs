@@ -23,7 +23,9 @@ pub async fn get_suburb_sales_history(
     Query(range): Query<RangeQuery>,
     State(state): State<AppState>,
 ) -> impl IntoResponse {
-    let lock = state.sales_history.clone();
+    range.validate_range_query()?;
+
+    let lock = state.data.sales_history.clone();
     let guard = read_lock_handler(&lock);
 
     let result: Vec<PropertyDetail> = guard
@@ -32,14 +34,28 @@ pub async fn get_suburb_sales_history(
         .cloned()
         .collect();
 
-    let result = result.apply_range_filter(range);
+    if result.is_empty() {
+        debug!(
+            "GET /sales-history/suburb/{suburb} -> {}",
+            StatusCode::NOT_FOUND
+        );
+        return Err(ApiError::NotFound(Some(format!(
+            "no properties found in suburb: {}",
+            suburb
+        ))));
+    }
+
+    let result = result.apply_range_filter(range.clone());
 
     if result.is_empty() {
         debug!(
             "GET /sales-history/suburb/{suburb} -> {}",
             StatusCode::NOT_FOUND
         );
-        return Err(ApiError::NotFound);
+        return Err(ApiError::NotFound(Some(format!(
+            "no properties found in suburb: {} for the selected range ({:?} - {:?})",
+            suburb, range.from_year, range.to_year
+        ))));
     }
 
     debug!("GET /sales-history/suburbs/{suburb} -> {}", StatusCode::OK);
