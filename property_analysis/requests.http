@@ -1,6 +1,5 @@
 @base_url = http://localhost:3000
-@access_token = eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJleHAiOjE3ODE0NjI5NjgsInN1YiI6ImFwaS1jbGllbnQifQ.jN8ted4G4zWK40WHbCDOj2Q21uYP5OPOT5c4gJJNxjw
-
+@access_token = eyJ0e...1Ljkk
 # ─────────────────────────────────────────
 # AUTH
 # ─────────────────────────────────────────
@@ -63,6 +62,6 @@ Accept: application/json
 Authorization: Bearer {{access_token}}
 
 ### Listings — Brackenfell, Houses Only
-GET {{base_url}}/v1/listings?suburb=brackenfell&property_type=house
+GET {{base_url}}/v1/listings?suburb=brackenfell&property_type=flat
 Accept: application/json
 Authorization: Bearer {{access_token}}

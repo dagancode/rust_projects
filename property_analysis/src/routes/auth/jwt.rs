@@ -36,6 +36,7 @@ pub async fn post_create_access_token(
             Err(_) => Err(ApiError::Unauthorized),
         }?;
 
+        tracing::info!("Access token created");
         Ok((
             StatusCode::CREATED,
             Json(json!({

@@ -15,6 +15,8 @@ pub enum ApiError {
     Unauthorized,
     #[error("validation error")]
     ValidationError(Option<String>),
+    #[error("database error")]
+    DatabaseError(Option<String>),
 }
 
 impl ApiError {
@@ -41,8 +43,15 @@ impl IntoResponse for ApiError {
             Self::BadRequest => (StatusCode::BAD_REQUEST, None),
             Self::Unauthorized => (StatusCode::UNAUTHORIZED, None),
             Self::ValidationError(ctx) => (StatusCode::BAD_REQUEST, ctx),
+            Self::DatabaseError(ctx) => (StatusCode::INTERNAL_SERVER_ERROR, ctx),
         };
 
         (status, ApiError::create_json_response(error_msg, context)).into_response()
+    }
+}
+
+impl From<sqlx::Error> for ApiError {
+    fn from(error: sqlx::Error) -> Self {
+        ApiError::DatabaseError(Some(error.to_string()))
     }
 }

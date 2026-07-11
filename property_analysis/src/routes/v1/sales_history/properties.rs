@@ -1,3 +1,5 @@
+use std::collections::HashMap;
+
 use axum::{
     extract::{Query, State},
     http::StatusCode,
@@ -10,10 +12,10 @@ use tracing::debug;
 use crate::models::{
     api::{ApiResponse, MetaData},
     app::AppState,
-    domain::PropertyDetail,
+    db::PropertySaleRow,
+    domain::{Location, Property, PropertyDetail, PropertySale},
     error::ApiError,
 };
-use crate::routes::v1::utils::read_lock_handler;
 
 #[derive(Clone, Serialize, Deserialize)]
 pub struct PropertyRequest {
@@ -32,20 +34,34 @@ pub async fn get_property_sales_history(
     let street = property_request.street.to_lowercase();
     let number = property_request.number.to_lowercase();
 
-    let lock = state.data.sales_history.clone();
-    let guard = read_lock_handler(&lock);
+    let rows: Vec<PropertySaleRow> = sqlx::query_as(
+        r#"
+        SELECT 
+            pd.id as property_id,
+            pd.street_number,
+            pd.street_name,
+            pd.neighbourhood,
+            pd.suburb,
+            pd.city,
+            pd.province,
+            pd.source_url,
+            psh.id as sale_id,
+            psh.year,
+            psh.price
+        FROM property_detail pd
+        JOIN property_sales_history psh ON psh.property_id = pd.id
+        WHERE pd.suburb ILIKE $1
+            AND pd.street_name ILIKE $2
+            AND pd.street_number ILIKE $3
+    "#,
+    )
+    .bind(format!("%{}%", suburb))
+    .bind(format!("%{}%", street))
+    .bind(format!("%{}%", number))
+    .fetch_all(&state.db)
+    .await?;
 
-    let result: Vec<PropertyDetail> = guard
-        .iter()
-        .filter(|val| {
-            val.property.location.suburb.eq(&suburb)
-                && val.property.location.street_name.contains(&street)
-                && val.property.location.street_number.eq(&number)
-        })
-        .cloned()
-        .collect();
-
-    if result.is_empty() {
+    if rows.is_empty() {
         debug!(
             "GET /sales-history/suburb/{suburb} -> {}",
             StatusCode::NOT_FOUND
@@ -56,14 +72,47 @@ pub async fn get_property_sales_history(
         ))));
     }
 
+    let mut property_map = HashMap::new();
+
+    for row in &rows {
+        let property_sale = PropertySale {
+            id: row.sale_id,
+            year: row.year as u16,
+            price: row.price,
+        };
+
+        let property_detail = PropertyDetail {
+            property: Property {
+                id: row.property_id,
+                location: Location {
+                    street_number: row.street_number.clone(),
+                    street_name: row.street_name.clone(),
+                    neighbourhood: row.neighbourhood.clone(),
+                    suburb: row.suburb.clone(),
+                    city: row.city.clone(),
+                    province: row.province.clone(),
+                    source_url: row.source_url.clone(),
+                },
+            },
+            sales_history: vec![property_sale],
+        };
+
+        property_map
+            .entry(row.property_id)
+            .and_modify(|pd: &mut PropertyDetail| pd.sales_history.push(property_sale))
+            .or_insert_with(|| property_detail);
+    }
+
+    let results: Vec<PropertyDetail> = property_map.into_values().collect();
+
     debug!(
         "GET /sales-history/properties?suburb:{suburb}&street:{street}&number:{number} -> {}",
         StatusCode::OK
     );
-    let count = result.len() as u32;
+    let count = results.len() as u32;
 
     Ok(Json(ApiResponse {
-        data: result,
+        data: results,
         meta: Some(MetaData { count }),
     }))
 }

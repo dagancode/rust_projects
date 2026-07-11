@@ -1,13 +1,17 @@
-use std::sync::Arc;
-use std::sync::RwLock;
-
 use axum::middleware;
-use axum::{routing::{get, post}, Router};
+use axum::{
+    routing::{get, post},
+    Router,
+};
+use clap_builder::Parser;
 use dotenvy::dotenv;
-use property_analysis::models::app::AppData;
+
+use property_analysis::cli::Cli;
+use property_analysis::db;
 use property_analysis::routes::auth::jwt::post_create_access_token;
 use property_analysis::routes::auth::jwt::validate_token;
-use property_analysis::services::csv::load_sales_history_csv_files;
+use property_analysis::services::csv::load_sales_history_directory;
+use sqlx::PgPool;
 use tracing::{debug, info};
 
 use property_analysis::models::app::AppState;
@@ -36,25 +40,49 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let port = std::env::var("PORT").expect("PORT must be set in .env");
 
-    info!("Welcome to the Property API");
-    debug!("listening on port {port}");
+    let cli = Cli::parse();
+    if cli.force && !cli.seed {
+        eprintln!("--force requires --seed");
+        std::process::exit(1);
+    }
 
-    //load_sales_history_csv_files(r"C:\Users\User\source\repos\rust\rust_projects\property_analysis\property_data\sales_history");
+    info!("Welcome to the Property API");
+    debug!("Listening on port {port}");
 
     let sales_history_path = std::env::var("SALES_HISTORY_PATH")
         .expect("Failed to load path. SALES_HISTORY_PATH must be set in .env ");
     let property_listings_path = std::env::var("PROPERTY_LISTINGS_PATH")
         .expect("Failed to load path. PROPERTY_LISTINGS_PATH must be set in .env ");
     let jwt_secret = std::env::var("JWT_SECRET").expect("JWT_SECRET must be set in .env");
+    let database_url = std::env::var("DATABASE_URL").expect("DATABASE_URL must be set in .env");
 
-    let sales_history = load_sales_history_csv_files(&sales_history_path)?;
-    let property_listings = load_listings(&property_listings_path)?;
+    let db = PgPool::connect(&database_url).await?;
+    info!("Connection established to DB");
+    sqlx::migrate!().run(&db).await?;
+    info!("DB Migrations ran successfully");
+
+    if cli.seed && cli.force {
+        info!("Truncating tables with existing data...");
+        db::seeder::truncate_listings(&db).await?;
+        db::seeder::truncate_sales_history(&db).await?;
+        info!("Seeding database from CSV files...");
+        db::seeder::seed_listings(&db, &load_listings(&property_listings_path)?).await?;
+        db::seeder::seed_sales_history(&db, &load_sales_history_directory(&sales_history_path)?).await?;
+        info!("Seeding complete");
+    } else if cli.seed {
+        info!("Seeding database from CSV files...");
+        db::seeder::seed_listings(&db, &load_listings(&property_listings_path)?).await?;
+        db::seeder::seed_sales_history(&db, &load_sales_history_directory(&sales_history_path)?).await?;
+        info!("Seeding complete");
+    } else if cli.upsert {
+        info!("Upserting data from CSV files...");
+        db::seeder::upsert_listings(&db, &load_listings(&property_listings_path)?).await?;
+        db::seeder::upsert_sales_history(&db, &load_sales_history_directory(&sales_history_path)?).await?;
+        info!("Upsert complete");
+    }
 
     let shared_app_state = AppState {
-        data: AppData {
-            sales_history: Arc::new(RwLock::new(sales_history)),
-            property_listings: Arc::new(RwLock::new(property_listings)),
-        },
+        db,
         encoding_key: jsonwebtoken::EncodingKey::from_secret(jwt_secret.as_bytes()),
         decoding_key: jsonwebtoken::DecodingKey::from_secret(jwt_secret.as_bytes()),
         jwt_secret,
@@ -79,7 +107,10 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             get(get_suburb_value_signals),
         )
         .route("/listings", get(get_listings))
-        .layer(middleware::from_fn_with_state(shared_app_state.clone(), validate_token));
+        .layer(middleware::from_fn_with_state(
+            shared_app_state.clone(),
+            validate_token,
+        ));
 
     let app_router = Router::new()
         .route("/health", get(get_health))

@@ -1,19 +1,12 @@
 use crate::{
     models::{
-        analysis::ValueSignal,
-        api::{ApiResponse, MetaData},
-        app::AppState,
-        domain::PropertyListing,
-        error::ApiError,
-    },
-    routes::v1::utils::read_lock_handler,
-    services::analysis::aggregate_analysis::suburb_aggregate_analysis,
+        analysis::ValueSignal, api::{ApiResponse, MetaData}, app::AppState, db::PropertyValueSignalRow, error::ApiError,
+    }
 };
 use axum::{
     extract::{Path, State},
     Json,
 };
-use rust_decimal::Decimal;
 
 // GET /v1/analysis/suburbs/{suburb}/value-signals
 #[axum::debug_handler]
@@ -21,30 +14,51 @@ pub async fn get_suburb_value_signals(
     Path(suburb): Path<String>,
     State(state): State<AppState>,
 ) -> Result<Json<ApiResponse<Vec<ValueSignal>>>, ApiError> {
-    let lock = state.data.property_listings.clone();
-    let guard = read_lock_handler(&lock);
+    let rows: Vec<PropertyValueSignalRow> = sqlx::query_as(r#"
+    WITH suburb_avg AS (
+        SELECT AVG(price) as avg_price
+        FROM property_listings
+        WHERE address ILIKE $1
+    )
+    SELECT 
+        source_url,
+        title,
+        price,
+        address,
+        property_type,
+        listing_date,
+        erf_size_m2,
+        floor_size_m2,
+        price_per_m2,
+        levies,
+        rates_and_taxes,
+        bedrooms,
+        bedroom_detail,
+        bathrooms,
+        kitchens,
+        lounges,
+        dining_rooms,
+        parking,
+        garage,
+        pool,
+        garden,
+        pet_friendly,
+        facing,
+        roof,
+        wall,
+        floor,
+        internet_access,
+        key_features,
+        suburb_avg.avg_price
+    FROM property_listings, suburb_avg
+    WHERE address ILIKE $1
+        AND price <= suburb_avg.avg_price
+    "#)
+        .bind(suburb)
+        .fetch_all(&state.db)
+        .await?;
 
-    let analysis = suburb_aggregate_analysis(&suburb, &guard).ok_or(ApiError::NotFound(Some(
-        format!("no properties found in suburb: {}", suburb),
-    )))?;
-
-    let listings: Vec<PropertyListing> = guard
-        .iter()
-        .filter(|p| p.address.contains(&suburb) && p.price < analysis.avg_price)
-        .cloned()
-        .collect();
-
-    let mut result: Vec<_> = listings
-        .iter()
-        .map(|l| ValueSignal {
-            listing: l.clone(),
-            suburb_avg_price: analysis.avg_price,
-            discount_amount: analysis.avg_price - l.price,
-            discount_percentage: (Decimal::from(100)
-                - ((l.price / analysis.avg_price) * Decimal::from(100)))
-            .round_dp(2),
-        })
-        .collect();
+    let mut result: Vec<ValueSignal> = rows.into_iter().map(ValueSignal::from).collect();
 
     result.sort_by(|a, b| b.discount_percentage.cmp(&a.discount_percentage));
     let count = result.iter().count() as u32;

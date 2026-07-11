@@ -9,12 +9,8 @@ use tracing::debug;
 
 use crate::{
     models::{
-        api::{ApiResponse, MetaData},
-        app::AppState,
-        domain::{PropertyListing, PropertyType},
-        error::ApiError,
-    },
-    routes::v1::utils::read_lock_handler,
+        api::{ApiResponse, MetaData}, app::AppState, db::PropertyListingRow, domain::{PropertyListing, PropertyType}, error::ApiError,
+    }
 };
 
 #[derive(Deserialize, Serialize)]
@@ -33,25 +29,46 @@ pub async fn get_listings(
         PropertyType::from(property_type_query.as_str()).validate_property_type_query()?
     }
 
-    let lock = state.data.property_listings.clone();
-    let guard = read_lock_handler(&lock);
+    let rows: Vec<PropertyListingRow> = sqlx::query_as(r#"
+    SELECT 
+        source_url,
+        title,
+        price,
+        address,
+        property_type,
+        listing_date,
+        erf_size_m2,
+        floor_size_m2,
+        price_per_m2,
+        levies,
+        rates_and_taxes,
+        bedrooms,
+        bedroom_detail,
+        bathrooms,
+        kitchens,
+        lounges,
+        dining_rooms,
+        parking,
+        garage,
+        pool,
+        garden,
+        pet_friendly,
+        facing,
+        roof,
+        wall,
+        floor,
+        internet_access,
+        key_features
+    FROM property_listings
+    WHERE ($1 IS NULL OR address ILIKE $1)
+        AND ($2 IS NULL OR property_type ILIKE $2)
+    "#)
+    .bind(query.suburb.map(|s| format!("%{s}%")))
+    .bind(query.property_type)
+    .fetch_all(&state.db)
+    .await?;
 
-    let result: Vec<PropertyListing> = guard
-        .iter()
-        .filter(|p| {
-            let suburb_match = query.suburb.as_ref().map_or(true, |s| {
-                p.address
-                    .to_ascii_lowercase()
-                    .contains(&s.to_ascii_lowercase())
-            });
-            let type_match = query.property_type.as_ref().map_or(true, |t| {
-                p.property_type
-                    .eq(&PropertyType::from(t.to_ascii_lowercase().as_str())) // FIX: PROP-7
-            });
-            suburb_match && type_match
-        })
-        .cloned()
-        .collect();
+    let result: Vec<PropertyListing> = rows.into_iter().map(PropertyListing::from).collect();
 
     if result.is_empty() {
         debug!("/v1/listings -> {}", StatusCode::NOT_FOUND);

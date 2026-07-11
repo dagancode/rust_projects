@@ -1,8 +1,9 @@
 pub mod analysis;
 pub mod api;
 pub mod app;
+pub mod auth;
 pub mod csv;
+pub mod db;
 pub mod domain;
 pub mod error;
 pub mod filters;
-pub mod auth;

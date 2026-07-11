@@ -1,3 +1,4 @@
+use chrono::{Datelike, NaiveDate};
 use rust_decimal::Decimal;
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
@@ -40,7 +41,6 @@ pub struct PropertyListing {
     pub title: String,
     pub price: Decimal,
     pub address: String,
-    //pub listing_number: String,
     pub property_type: PropertyType,
     pub listing_date: ListingDate,
     pub erf_size_m2: Option<u32>,
@@ -139,6 +139,16 @@ impl From<&str> for ListingDate {
     }
 }
 
+impl From<NaiveDate> for ListingDate {
+    fn from(value: NaiveDate) -> Self {
+        Self {
+            year: value.year() as u16,
+            month: value.month() as u16,
+            day: value.day() as u16,
+        }
+    }
+}
+
 impl RangeFilter for Vec<PropertyListing> {
     fn apply_range_filter(mut self, range: RangeQuery) -> Self {
         match range {
@@ -206,5 +216,14 @@ impl RangeFilter for Vec<PropertyDetail> {
             }
             _ => self,
         }
+    }
+}
+
+impl TryFrom<ListingDate> for NaiveDate {
+    type Error = String;
+
+    fn try_from(value: ListingDate) -> Result<Self, Self::Error> {
+        chrono::NaiveDate::from_ymd_opt(value.year as i32, value.month as u32, value.day as u32)
+            .ok_or(format!("Unable to parse {:?} as NativeDate", value))
     }
 }

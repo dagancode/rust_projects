@@ -114,7 +114,7 @@ pub fn parse_listings_record(record: ListingsRecord) -> PropertyListing {
     }
 }
 
-pub fn load_sales_history_csv_files(
+pub fn load_sales_history_directory(
     path: &str,
 ) -> Result<Vec<PropertyDetail>, Box<dyn std::error::Error>> {
     match std::fs::read_dir(path) {
@@ -131,7 +131,7 @@ pub fn load_sales_history_csv_files(
                 })
                 .collect();
 
-            info!("Found {} CSV files.", csv_files.len());
+            info!("Found {} CSV file(s).", csv_files.len());
 
             let mut results: Vec<PropertyDetail> = Vec::new();
 

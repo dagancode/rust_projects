@@ -2,6 +2,7 @@ use std::sync::{RwLock, RwLockReadGuard};
 
 use tracing::warn;
 
+#[deprecated]
 pub fn read_lock_handler<'a, T>(read_lock: &'a RwLock<Vec<T>>) -> RwLockReadGuard<'a, Vec<T>> {
     let guard = match read_lock.read() {
         Ok(lock) => lock,

@@ -32,5 +32,12 @@ tracing = "0.1.44"
 tracing-subscriber = {"version" = "0.3.23", features = ["env-filter"]}
 chrono = "0.4.44"
 
-
+# Auth
 jsonwebtoken = { version = "10", features = ["rust_crypto"] }
+
+# Database
+sqlx = { version = "0.9.0", features = ["runtime-tokio", "postgres", "uuid", "chrono", "rust_decimal", "migrate"] }
+
+# Command Line Argument Parsing
+clap ={ version = "4.6.1", features = ["derive", "help"]}
+clap_builder = "4.6.0"

@@ -1,0 +1,14 @@
+services:
+  postgres:
+    image: postgres:16
+    environment:
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: admin
+      POSTGRES_DB: property_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - property_db_data:/var/lib/postgresql/data
+
+volumes:
+  property_db_data:
