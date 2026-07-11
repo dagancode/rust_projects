@@ -31,16 +31,17 @@ cargo run --features slow
 
 A REST API for analysing the South African property market, focused on Cape Town and the Western Cape. Dual purpose: portfolio project and personal investment research tool.
 
-The API surfaces insights such as suburb price trends, full sales history for specific properties, and value signals for underpriced listings.
+The API surfaces insights such as suburb price trends, full sales history for specific properties, and value signals for underpriced listings. Backed by PostgreSQL with a built-in CLI seeding tool for loading scraped property data.
 
 **Stack:**
-- `axum` - HTTP framework
-- `tokio` - async runtime
-- `sqlx` + PostgreSQL - persistence *(planned)*
-- `thiserror` - structured domain error handling
-- `reqwest` - HTTP client *(planned for scraper)*
-- `rust_decimal` - monetary values (never `f64`)
-- `serde` + `csv` - data ingestion
+- `axum` — HTTP framework
+- `tokio` — async runtime
+- `sqlx` + PostgreSQL — persistence
+- `thiserror` — structured domain error handling
+- `jsonwebtoken` — JWT authentication
+- `clap` — CLI seeding tool
+- `rust_decimal` — monetary values (never `f64`)
+- `serde` + `csv` — data ingestion pipeline
 
 **Core questions the API answers:**
 1. Is a suburb trending up over time?
@@ -48,26 +49,39 @@ The API surfaces insights such as suburb price trends, full sales history for sp
 3. Is a property priced below the suburb average?
 
 **Concepts covered:**
-- Axum routing, extractors, and shared application state
-- `Arc<RwLock<T>>` for concurrent read access across handlers
+- Axum routing, extractors, middleware, and shared application state
+- JWT authentication via `from_fn_with_state` middleware
+- `sqlx` with compile-time checked queries against PostgreSQL
 - Structured error handling with `thiserror` and `IntoResponse`
 - Type-safe money handling with `rust_decimal`
+- CLI tooling with `clap` — multiple seeding modes with transaction management
+- Docker Compose for local development
 - Domain modelling and CSV ingestion pipeline
-- Modular project structure (`models`, `services`, `routes`)
+- Modular project structure (`models`, `services`, `routes`, `db`)
 - Async Rust with `tokio`
 
 **Endpoints:**
-| Method | Path | Description |
-|--------|------|-------------|
-| `GET` | `/health` | Health check |
-| `GET` | `/suburbs/{suburb}/sales-history` | Full sales history for a suburb |
+| Method | Path | Auth | Description |
+|---|---|---|---|
+| `GET` | `/health` | ❌ | Health check |
+| `POST` | `/auth/token` | ❌ | Obtain a JWT access token |
+| `GET` | `/v1/sales-history/suburbs/{suburb}` | ✅ | Sales history for a suburb with optional year filter |
+| `GET` | `/v1/sales-history/properties` | ✅ | Search by suburb, street, and number |
+| `GET` | `/v1/listings` | ✅ | Listings filtered by suburb and property type |
+| `GET` | `/v1/analysis/suburbs/{suburb}/trends` | ✅ | Year-by-year price trend analysis |
+| `GET` | `/v1/analysis/suburbs/{suburb}/aggregate` | ✅ | Aggregate suburb stats |
+| `GET` | `/v1/analysis/suburbs/{suburb}/value-signals` | ✅ | Listings priced below suburb average |
 
 **Run the API:**
 ```bash
 cd property_analysis
-cp .env.example .env  # set SALES_HISTORY_PATH
-cargo run
+cp .env.example .env       # configure environment
+docker compose up -d       # start PostgreSQL
+cargo run -- --seed        # seed database from CSV
+cargo run                  # start the API
 ```
+
+See [property_analysis/README.md](./property_analysis/README.md) for full setup instructions.
 
 ---
 
@@ -82,4 +96,4 @@ cargo run
 | Project | Concepts | Status |
 |---|---|---|
 | txt_fighter | Traits, modules, ownership | In progress |
-| property_analysis | Async, axum, concurrency, error handling | In progress |
+| property_analysis | Async, axum, PostgreSQL, JWT auth, CLI tooling | In progress |
