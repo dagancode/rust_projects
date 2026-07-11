@@ -1,0 +1,67 @@
+@base_url = http://localhost:3000
+@access_token = eyJ0e...1Ljkk
+# ─────────────────────────────────────────
+# AUTH
+# ─────────────────────────────────────────
+
+### Create Access Token
+POST {{base_url}}/auth/token
+Content-Type: application/json
+
+{
+    "secret": "FEEDBEEFFEEDBEEFFEEDBEEFFEEDBEEF"
+}
+
+# ─────────────────────────────────────────
+# HEALTH
+# ─────────────────────────────────────────
+
+### Health Check
+GET {{base_url}}/health
+
+# ─────────────────────────────────────────
+# SALES HISTORY
+# ─────────────────────────────────────────
+
+### Full Sales History — Brackenfell (filtered by year)
+GET {{base_url}}/v1/sales-history/suburbs/brackenfell?from=2023&to=2026
+Accept: application/json
+Authorization: Bearer {{access_token}}
+
+### Specific Property Search
+GET {{base_url}}/v1/sales-history/properties?suburb=brackenfell&street=crammix&number=1
+Accept: application/json
+Authorization: Bearer {{access_token}}
+
+# ─────────────────────────────────────────
+# ANALYSIS
+# ─────────────────────────────────────────
+
+### Suburb Trend Analysis
+GET {{base_url}}/v1/analysis/suburbs/brackenfell/trends?from=2019&to=2024
+Accept: application/json
+Authorization: Bearer {{access_token}}
+
+### Suburb Aggregate Analysis
+GET {{base_url}}/v1/analysis/suburbs/brackenfell/aggregate
+Accept: application/json
+Authorization: Bearer {{access_token}}
+
+### Suburb Value Signals
+GET {{base_url}}/v1/analysis/suburbs/brackenfell/value-signals
+Accept: application/json
+Authorization: Bearer {{access_token}}
+
+# ─────────────────────────────────────────
+# LISTINGS
+# ─────────────────────────────────────────
+
+### All Listings — Brackenfell
+GET {{base_url}}/v1/listings?suburb=brackenfell
+Accept: application/json
+Authorization: Bearer {{access_token}}
+
+### Listings — Brackenfell, Houses Only
+GET {{base_url}}/v1/listings?suburb=brackenfell&property_type=flat
+Accept: application/json
+Authorization: Bearer {{access_token}}

@@ -1,0 +1,43 @@
+[package]
+name = "property_analysis"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+# Domain types
+uuid = { version = "1.23.2", features = ["v4", "serde"] }
+rust_decimal = { version = "1.42.0", features = ["serde-with-str", "macros"] }
+
+# Serialisation
+serde = { version = "1", features = ["derive"] }
+serde_json = { version = "1.0.150" }
+
+# Data loading
+csv = "1"
+
+# Configuration
+dotenvy = "0.15"
+
+# Async
+tokio = { "version" = "1.52.3", features = ["full"] }
+
+# HTTP framework
+axum = { "version" = "0.8.9", features = ["macros"]}
+
+# Error handling
+thiserror = "2.0.18"
+
+# Logging
+tracing = "0.1.44"
+tracing-subscriber = {"version" = "0.3.23", features = ["env-filter"]}
+chrono = "0.4.44"
+
+# Auth
+jsonwebtoken = { version = "10", features = ["rust_crypto"] }
+
+# Database
+sqlx = { version = "0.9.0", features = ["runtime-tokio", "postgres", "uuid", "chrono", "rust_decimal", "migrate"] }
+
+# Command Line Argument Parsing
+clap ={ version = "4.6.1", features = ["derive", "help"]}
+clap_builder = "4.6.0"
