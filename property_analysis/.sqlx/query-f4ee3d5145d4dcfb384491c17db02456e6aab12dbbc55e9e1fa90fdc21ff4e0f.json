@@ -1,0 +1,17 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n                        INSERT INTO property_sales_history \n                            (id, property_id, year, price)\n                        VALUES \n                            ($1, $2, $3, $4)\n                        ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Uuid",
+        "Int4",
+        "Numeric"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "f4ee3d5145d4dcfb384491c17db02456e6aab12dbbc55e9e1fa90fdc21ff4e0f"
+}
