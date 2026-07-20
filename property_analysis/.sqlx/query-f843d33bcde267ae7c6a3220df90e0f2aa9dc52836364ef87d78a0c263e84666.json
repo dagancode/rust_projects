@@ -1,0 +1,21 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n                    INSERT INTO property_detail \n                        (id, street_number, street_name, neighbourhood, suburb, city, province, source_url)\n                    VALUES \n                        ($1, $2, $3, $4, $5, $6, $7, $8)\n                    ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Varchar",
+        "Varchar",
+        "Varchar",
+        "Varchar",
+        "Varchar",
+        "Varchar",
+        "Varchar"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "f843d33bcde267ae7c6a3220df90e0f2aa9dc52836364ef87d78a0c263e84666"
+}

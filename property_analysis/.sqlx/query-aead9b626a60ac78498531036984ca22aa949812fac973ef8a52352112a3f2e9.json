@@ -1,0 +1,12 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "TRUNCATE TABLE property_sales_history, property_detail",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": []
+    },
+    "nullable": []
+  },
+  "hash": "aead9b626a60ac78498531036984ca22aa949812fac973ef8a52352112a3f2e9"
+}

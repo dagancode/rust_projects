@@ -1,0 +1,42 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            INSERT INTO property_listings (\n                id, \n                source_url, \n                title, \n                price, \n                address, \n                property_type, \n                listing_date, \n                erf_size_m2, \n                floor_size_m2, \n                price_per_m2, \n                levies, \n                rates_and_taxes, \n                bedrooms, \n                bedroom_detail, \n                bathrooms, \n                kitchens, \n                lounges, \n                dining_rooms, \n                parking, \n                garage, \n                pool, \n                garden, \n                pet_friendly, \n                facing, \n                roof, \n                wall, \n                floor, \n                internet_access, \n                key_features\n                )\n            VALUES \n                ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24, $25, $26, $27, $28, $29)\n                ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Varchar",
+        "Varchar",
+        "Numeric",
+        "Varchar",
+        "Varchar",
+        "Date",
+        "Int4",
+        "Int4",
+        "Numeric",
+        "Numeric",
+        "Numeric",
+        "Int2",
+        "Varchar",
+        "Int2",
+        "Int2",
+        "Int2",
+        "Int2",
+        "Int2",
+        "Int2",
+        "Bool",
+        "Bool",
+        "Bool",
+        "Varchar",
+        "Varchar",
+        "Varchar",
+        "Varchar",
+        "Varchar",
+        "Varchar"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "552e4fe03aef0f72998aa7c76d6f4ece5a1e3347ce17bfd67490082ea775ce76"
+}
