@@ -1,5 +1,5 @@
-@base_url = http://localhost:3000
-@access_token = eyJ0e...1Ljkk
+@base_url = https://property-analysis-api.onrender.com
+@access_token = eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJleHAiOjE3ODUwNjU1ODQsInN1YiI6ImFwaS1jbGllbnQifQ.cGy-ecNGGr-ddnYcn6MIone6iO_kbIJKh8hKi3FMhDc
 # ─────────────────────────────────────────
 # AUTH
 # ─────────────────────────────────────────
@@ -62,6 +62,6 @@ Accept: application/json
 Authorization: Bearer {{access_token}}
 
 ### Listings — Brackenfell, Houses Only
-GET {{base_url}}/v1/listings?suburb=brackenfell&property_type=flat
+GET {{base_url}}/v1/listings?suburb=brackenfell&property_type=house
 Accept: application/json
 Authorization: Bearer {{access_token}}

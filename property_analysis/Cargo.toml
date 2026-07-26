@@ -23,6 +23,7 @@ tokio = { "version" = "1.52.3", features = ["full"] }
 
 # HTTP framework
 axum = { "version" = "0.8.9", features = ["macros"]}
+tower-http = { version = "0.6", features = ["cors"] }
 
 # Error handling
 thiserror = "2.0.18"
@@ -36,7 +37,7 @@ chrono = "0.4.44"
 jsonwebtoken = { version = "10", features = ["rust_crypto"] }
 
 # Database
-sqlx = { version = "0.9.0", features = ["runtime-tokio", "postgres", "uuid", "chrono", "rust_decimal", "migrate"] }
+sqlx = { version = "0.9.0", features = ["runtime-tokio", "postgres", "uuid", "chrono", "rust_decimal", "migrate", "tls-rustls"] }
 
 # Command Line Argument Parsing
 clap ={ version = "4.6.1", features = ["derive", "help"]}

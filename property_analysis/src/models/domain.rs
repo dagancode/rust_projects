@@ -88,7 +88,7 @@ pub struct ListingDate {
 
 impl From<&str> for PropertyType {
     fn from(value: &str) -> PropertyType {
-        match value {
+        match value.to_ascii_lowercase().as_str() {
             "apartment" | "flat" | "apartment / flat" => Self::Apartment,
             "commercial" | "commercial property" => Self::Commercial,
             "industrial" | "industrial property" => Self::Industrial,
