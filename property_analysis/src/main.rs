@@ -10,7 +10,7 @@ use property_analysis::cli::Cli;
 use property_analysis::db;
 use property_analysis::routes::auth::jwt::post_create_access_token;
 use property_analysis::routes::auth::jwt::validate_token;
-use property_analysis::services::csv::load_sales_history_directory;
+use property_analysis::services::csv::load_csv_data;
 use sqlx::PgPool;
 use tracing::{debug, info};
 
@@ -49,10 +49,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     info!("Welcome to the Property API");
     debug!("Listening on port {port}");
 
-    let sales_history_path = std::env::var("SALES_HISTORY_PATH")
-        .expect("Failed to load path. SALES_HISTORY_PATH must be set in .env ");
-    let property_listings_path = std::env::var("PROPERTY_LISTINGS_PATH")
-        .expect("Failed to load path. PROPERTY_LISTINGS_PATH must be set in .env ");
     let jwt_secret = std::env::var("JWT_SECRET").expect("JWT_SECRET must be set in .env");
     let database_url = std::env::var("DATABASE_URL").expect("DATABASE_URL must be set in .env");
 
@@ -63,21 +59,35 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     if cli.seed && cli.force {
         info!("Truncating tables with existing data...");
+
         db::seeder::truncate_listings(&db).await?;
         db::seeder::truncate_sales_history(&db).await?;
+
         info!("Seeding database from CSV files...");
-        db::seeder::seed_listings(&db, &load_listings(&property_listings_path)?).await?;
-        db::seeder::seed_sales_history(&db, &load_sales_history_directory(&sales_history_path)?).await?;
+
+        let (sales_history, property_listings) = load_csv_data()?;
+
+        db::seeder::seed_listings(&db, &property_listings).await?;
+        db::seeder::seed_sales_history(&db, &sales_history).await?;
+
         info!("Seeding complete");
     } else if cli.seed {
         info!("Seeding database from CSV files...");
-        db::seeder::seed_listings(&db, &load_listings(&property_listings_path)?).await?;
-        db::seeder::seed_sales_history(&db, &load_sales_history_directory(&sales_history_path)?).await?;
+
+        let (sales_history, property_listings) = load_csv_data()?;
+
+        db::seeder::seed_listings(&db, &property_listings).await?;
+        db::seeder::seed_sales_history(&db, &sales_history).await?;
+
         info!("Seeding complete");
     } else if cli.upsert {
         info!("Upserting data from CSV files...");
-        db::seeder::upsert_listings(&db, &load_listings(&property_listings_path)?).await?;
-        db::seeder::upsert_sales_history(&db, &load_sales_history_directory(&sales_history_path)?).await?;
+
+        let (sales_history, property_listings) = load_csv_data()?;
+
+        db::seeder::upsert_listings(&db, &property_listings).await?;
+        db::seeder::upsert_sales_history(&db, &sales_history).await?;
+
         info!("Upsert complete");
     }
 
