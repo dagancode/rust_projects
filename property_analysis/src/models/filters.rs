@@ -18,10 +18,6 @@ pub trait RangeFilter {
 
 impl RangeQuery {
     pub fn validate_range_query(&self) -> Result<(), ApiError> {
-        if self.from_year.is_none() && self.to_year.is_none() {
-            return Err(ApiError::BadRequest);
-        }
-
         if let Some(from_year_query) = self.from_year {
             if from_year_query < 1900 || from_year_query > chrono::Utc::now().year() as u16 {
                 return Err(ApiError::ValidationError(Some(format!(

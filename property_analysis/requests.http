@@ -1,5 +1,5 @@
 @base_url = https://property-analysis-api.onrender.com
-@access_token = eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJleHAiOjE3ODUwNjU1ODQsInN1YiI6ImFwaS1jbGllbnQifQ.cGy-ecNGGr-ddnYcn6MIone6iO_kbIJKh8hKi3FMhDc
+@access_token = eyJ0e...2bRaE
 # ─────────────────────────────────────────
 # AUTH
 # ─────────────────────────────────────────
