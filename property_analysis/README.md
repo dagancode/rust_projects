@@ -145,7 +145,7 @@ Sprint 4 complete. All endpoints are backed by PostgreSQL via sqlx. Data is load
 
 ## Planned features
 
-- Deployment via Docker + Railway/Fly.io
+- Deployment via Docker + Render
 - TUI client built with `ratatui`
 - Multi-suburb and multi-province support
 - Expanded scraper coverage
