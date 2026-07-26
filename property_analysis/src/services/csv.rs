@@ -149,3 +149,15 @@ pub fn load_sales_history_directory(
         }
     }
 }
+
+pub fn load_csv_data(
+) -> Result<(Vec<PropertyDetail>, Vec<PropertyListing>), Box<dyn std::error::Error>> {
+    let sales_history_path = std::env::var("SALES_HISTORY_PATH")
+        .expect("Failed to load path. SALES_HISTORY_PATH must be set in .env ");
+    let property_listings_path = std::env::var("PROPERTY_LISTINGS_PATH")
+        .expect("Failed to load path. PROPERTY_LISTINGS_PATH must be set in .env ");
+    Ok((
+        load_sales_history_directory(&sales_history_path)?,
+        load_listings(&property_listings_path)?,
+    ))
+}
