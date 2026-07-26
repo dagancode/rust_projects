@@ -27,7 +27,7 @@ pub async fn post_create_access_token(
         Err(ApiError::Unauthorized)
     } else {
         let claims = Claims {
-            exp: (chrono::Utc::now() + chrono::Duration::minutes(1)).timestamp() as usize,
+            exp: (chrono::Utc::now() + chrono::Duration::minutes(60)).timestamp() as usize,
             sub: "api-client".to_string(),
         };
 

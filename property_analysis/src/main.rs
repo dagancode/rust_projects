@@ -5,6 +5,7 @@ use axum::{
 };
 use clap_builder::Parser;
 use dotenvy::dotenv;
+use tower_http::cors::{Any, CorsLayer};
 
 use property_analysis::cli::Cli;
 use property_analysis::db;
@@ -28,7 +29,6 @@ use property_analysis::routes::{
         },
     },
 };
-use property_analysis::services::csv::load_listings;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -98,6 +98,11 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         jwt_secret,
     };
 
+    let cors = CorsLayer::new()
+        .allow_origin(Any)
+        .allow_methods(Any)
+        .allow_headers(Any);
+
     let v1_routes = Router::new()
         .route("/sales-history/properties", get(get_property_sales_history))
         .route(
@@ -126,6 +131,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .route("/health", get(get_health))
         .route("/auth/token", post(post_create_access_token))
         .nest("/v1", v1_routes)
+        .layer(cors)
         .with_state(shared_app_state);
 
     let listener = tokio::net::TcpListener::bind(format!("0.0.0.0:{}", port)).await?;
