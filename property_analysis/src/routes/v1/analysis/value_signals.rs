@@ -54,7 +54,7 @@ pub async fn get_suburb_value_signals(
     WHERE address ILIKE $1
         AND price <= suburb_avg.avg_price
     "#)
-        .bind(suburb)
+        .bind(format!("%{}%", suburb))
         .fetch_all(&state.db)
         .await?;
 
