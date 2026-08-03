@@ -32,7 +32,7 @@ thiserror = "2.0.18"
 # Logging
 tracing = "0.1.44"
 tracing-subscriber = {"version" = "0.3.23", features = ["env-filter"]}
-chrono = "0.4.44"
+chrono = {version = "0.4.44", features = ["serde"]}
 
 # Auth
 jsonwebtoken = { version = "10", features = ["rust_crypto"] }
@@ -43,3 +43,10 @@ sqlx = { version = "0.9.0", features = ["runtime-tokio", "postgres", "uuid", "ch
 # Command Line Argument Parsing
 clap ={ version = "4.6.1", features = ["derive", "help"]}
 clap_builder = "4.6.0"
+
+# Crypto
+hmac = "0.13.0"
+sha2 = "0.11.0"
+
+# Encoding
+base64 = "0.23.0"

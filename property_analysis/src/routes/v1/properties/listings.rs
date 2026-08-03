@@ -9,14 +9,22 @@ use tracing::debug;
 
 use crate::{
     models::{
-        api::{ApiResponse, MetaData}, app::AppState, db::PropertyListingRow, domain::{PropertyListing, PropertyType}, error::ApiError,
+        api::{ApiResponse, MetaData}, app::AppState, cursor::PaginationParams, db::PropertyListingRow, domain::{PropertyListing, PropertyType}, error::ApiError,
     }
 };
 
 #[derive(Deserialize, Serialize)]
-pub struct ListingsQuery {
+pub struct ListingsFilters {
     pub suburb: Option<String>,
     pub property_type: Option<String>,
+}
+
+#[derive(Deserialize)]
+pub struct ListingsQuery {
+    #[serde(flatten)]
+    pub filters: ListingsFilters,
+    #[serde(flatten)]
+    pub pagination: PaginationParams,
 }
 
 // GET /v1/listings?suburb={suburb}&property_type={type}
@@ -25,7 +33,7 @@ pub async fn get_listings(
     Query(query): Query<ListingsQuery>,
     State(state): State<AppState>,
 ) -> impl IntoResponse {
-    if let Some(ref property_type_query) = query.property_type {
+    if let Some(ref property_type_query) = query.filters.property_type {
         PropertyType::from(property_type_query.as_str()).validate_property_type_query()?
     }
 
@@ -63,8 +71,8 @@ pub async fn get_listings(
     WHERE ($1 IS NULL OR address ILIKE $1)
         AND ($2 IS NULL OR property_type ILIKE $2)
     "#)
-    .bind(query.suburb.map(|s| format!("%{s}%")))
-    .bind(query.property_type)
+    .bind(query.filters.suburb.map(|s| format!("%{s}%")))
+    .bind(query.filters.property_type)
     .fetch_all(&state.db)
     .await?;
 

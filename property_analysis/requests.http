@@ -1,4 +1,4 @@
-@base_url = https://property-analysis-api.onrender.com
+@base_url = https://localhost:3000
 @access_token = eyJ0e...2bRaE
 # ─────────────────────────────────────────
 # AUTH

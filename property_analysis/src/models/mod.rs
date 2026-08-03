@@ -2,6 +2,7 @@ pub mod analysis;
 pub mod api;
 pub mod app;
 pub mod auth;
+pub mod cursor;
 pub mod csv;
 pub mod db;
 pub mod domain;
