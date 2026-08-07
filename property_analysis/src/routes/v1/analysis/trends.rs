@@ -68,6 +68,6 @@ pub async fn get_suburb_trend_analysis(
             suburb_name: suburb,
             sales,
         },
-        meta: Some(MetaData { count }),
+        meta: Some(MetaData { count, next_cursor: None }),
     }))
 }

@@ -10,4 +10,5 @@ pub struct ApiResponse<T> {
 #[derive(Debug, Serialize, Deserialize)]
 pub struct MetaData {
     pub count: u32,
+    pub next_cursor: Option<String>,
 }

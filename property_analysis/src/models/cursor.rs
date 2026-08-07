@@ -1,10 +1,10 @@
 use base64::{engine::general_purpose::URL_SAFE_NO_PAD, Engine as _};
-use chrono::{DateTime, Utc};
+use chrono::{DateTime, NaiveDate, Utc};
 use rust_decimal::Decimal;
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
-use crate::models::error::ApiError;
+use crate::{models::error::ApiError, routes::v1::properties::listings::ListingsFilters};
 
 #[derive(Serialize, Deserialize)]
 pub struct CursorPayload {
@@ -32,10 +32,11 @@ pub enum SortDirection {
 #[derive(Serialize, Deserialize)]
 pub enum SortValue {
     Price(Decimal),
-    ListedDate(DateTime<Utc>),
-    Sqm(i32),
+    ListedDate(NaiveDate),
+    Sqm(Option<i32>),
 }
 
+#[derive(Debug)]
 pub enum CursorError {
     /// base64 decode failed, or JSON deserialize failed
     MalformedEncoding,
@@ -83,7 +84,7 @@ pub struct PaginationParams {
 }
 
 impl PaginationParams {
-    fn validate(&self) -> Result<(), ApiError> {
+    pub fn validate(&self) -> Result<(), ApiError> {
         if let Some(limit) = self.limit {
             if limit == 0 || limit > 75 {
                 return Err(ApiError::ValidationError(Some(format!(
@@ -139,4 +140,96 @@ pub fn resolve_pagination(
             })
         }
     }
+}
+
+pub fn sort_column_name(sort: &SortField) -> &'static str {
+    match sort {
+        SortField::ListedDate => "listing_date",
+        SortField::Price => "price",
+        SortField::Sqm => "floor_size_m2",
+    }
+}
+
+use sqlx::{Postgres, QueryBuilder};
+
+pub fn build_listings_query(
+    filters: &ListingsFilters,
+    pagination: &ResolvedPagination,
+    limit: u32,
+) -> QueryBuilder<Postgres> {
+    let mut qb: QueryBuilder<Postgres> = QueryBuilder::new(
+        r#"SELECT 
+                    id, 
+                    title, 
+                    price, 
+                    address, 
+                    property_type, 
+                    listing_date, 
+                    erf_size_m2, 
+                    floor_size_m2, 
+                    price_per_m2, 
+                    levies, 
+                    rates_and_taxes, 
+                    bedrooms, 
+                    bedroom_detail, 
+                    bathrooms, 
+                    kitchens, 
+                    lounges, 
+                    dining_rooms, 
+                    parking, 
+                    garage, 
+                    pool, 
+                    garden, 
+                    pet_friendly, 
+                    facing, 
+                    roof, 
+                    wall, 
+                    floor, 
+                    internet_access, 
+                    key_features 
+                FROM property_listings 
+                WHERE 1=1 "#,
+    );
+
+    if let Some(suburb) = &filters.suburb {
+        qb.push(" AND address ILIKE ").push_bind(format!("%{}%", suburb.clone()));
+    }
+
+    if let Some(property_type) = &filters.property_type {
+        qb.push(" AND property_type = ")
+            .push_bind(property_type.clone());
+    }
+
+    let column = sort_column_name(&pagination.sort);
+    if let Some((last_value, last_id)) = &pagination.cursor_bound {
+        let op = match &pagination.direction {
+            SortDirection::Asc => ">",
+            SortDirection::Desc => "<",
+        };
+
+        qb.push(format!(" AND ({column}, id) {op} ("));
+
+        match last_value {
+            SortValue::Price(v) => {
+                qb.push_bind(*v);
+            }
+            SortValue::ListedDate(v) => {
+                qb.push_bind(*v);
+            }
+            SortValue::Sqm(v) => {
+                qb.push_bind(*v);
+            }
+        }
+
+        qb.push(", ").push_bind(*last_id).push(")");
+    }
+
+    let order_dir = match &pagination.direction {
+        SortDirection::Asc => "ASC",
+        SortDirection::Desc => "DESC",
+    };
+    qb.push(format!(" ORDER BY {column} {order_dir}, id {order_dir}"));
+    qb.push(" LIMIT ").push_bind(limit as i64);
+
+    qb
 }

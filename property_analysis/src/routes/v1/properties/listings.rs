@@ -7,10 +7,16 @@ use axum::{
 use serde::{Deserialize, Serialize};
 use tracing::debug;
 
-use crate::{
-    models::{
-        api::{ApiResponse, MetaData}, app::AppState, cursor::PaginationParams, db::PropertyListingRow, domain::{PropertyListing, PropertyType}, error::ApiError,
-    }
+use crate::models::{
+    api::{ApiResponse, MetaData},
+    app::AppState,
+    cursor::{
+        build_listings_query, encode_cursor, resolve_pagination, CursorError, CursorPayload,
+        PaginationParams, SortDirection, SortField, SortValue,
+    },
+    db::PropertyListingRow,
+    domain::{PropertyListing, PropertyType},
+    error::ApiError,
 };
 
 #[derive(Deserialize, Serialize)]
@@ -21,10 +27,12 @@ pub struct ListingsFilters {
 
 #[derive(Deserialize)]
 pub struct ListingsQuery {
-    #[serde(flatten)]
-    pub filters: ListingsFilters,
-    #[serde(flatten)]
-    pub pagination: PaginationParams,
+    pub suburb: Option<String>,
+    pub property_type: Option<String>,
+    pub sort: Option<SortField>,
+    pub order: Option<SortDirection>,
+    pub cursor: Option<String>,
+    pub limit: Option<u32>,
 }
 
 // GET /v1/listings?suburb={suburb}&property_type={type}
@@ -32,64 +40,69 @@ pub struct ListingsQuery {
 pub async fn get_listings(
     Query(query): Query<ListingsQuery>,
     State(state): State<AppState>,
-) -> impl IntoResponse {
-    if let Some(ref property_type_query) = query.filters.property_type {
+) -> Result<Json<ApiResponse<Vec<PropertyListing>>>, ApiError> {
+    let filters = ListingsFilters {
+        suburb: query.suburb,
+        property_type: query.property_type,
+    };
+    let pagination = PaginationParams {
+        sort: query.sort,
+        order: query.order,
+        cursor: query.cursor,
+        limit: query.limit,
+    };
+
+    tracing::debug!("{:?}", filters.suburb);
+    if let Some(ref property_type_query) = filters.property_type {
         PropertyType::from(property_type_query.as_str()).validate_property_type_query()?
     }
 
-    let rows: Vec<PropertyListingRow> = sqlx::query_as(r#"
-    SELECT 
-        source_url,
-        title,
-        price,
-        address,
-        property_type,
-        listing_date,
-        erf_size_m2,
-        floor_size_m2,
-        price_per_m2,
-        levies,
-        rates_and_taxes,
-        bedrooms,
-        bedroom_detail,
-        bathrooms,
-        kitchens,
-        lounges,
-        dining_rooms,
-        parking,
-        garage,
-        pool,
-        garden,
-        pet_friendly,
-        facing,
-        roof,
-        wall,
-        floor,
-        internet_access,
-        key_features
-    FROM property_listings
-    WHERE ($1 IS NULL OR address ILIKE $1)
-        AND ($2 IS NULL OR property_type ILIKE $2)
-    "#)
-    .bind(query.filters.suburb.map(|s| format!("%{s}%")))
-    .bind(query.filters.property_type)
-    .fetch_all(&state.db)
-    .await?;
+    pagination.validate()?;
+
+    let resolved = resolve_pagination(&pagination, state.cursor_secret.as_bytes())
+        .map_err(|e| {
+            match e {
+                CursorError::MalformedEncoding | CursorError::SignatureMismatch => {
+                    tracing::warn!("cursor rejected: {:?}", e);
+                    ApiError::ValidationError(Some("invalid or expired cursor".to_string()))
+                }
+                CursorError::QueryShapeMismatch => ApiError::ValidationError(Some(
+                    "cursor does not match the requested sort/order — start a new pagination sequence or omit sort/order when using a cursor".to_string()
+                )),
+            }
+        })?;
+
+    let limit = pagination.limit.unwrap_or(20);
+
+    let mut qb = build_listings_query(&filters, &resolved, limit);
+    let rows: Vec<PropertyListingRow> = qb.build_query_as().fetch_all(&state.db).await?;
+
+    let next_cursor = if rows.len() as u32 == limit {
+        rows.last().map(|last_row| {
+            let last_value = match resolved.sort {
+                SortField::Price => SortValue::Price(last_row.price),
+                SortField::ListedDate => SortValue::ListedDate(last_row.listing_date),
+                SortField::Sqm => SortValue::Sqm(last_row.floor_size_m2),
+            };
+
+            let payload = CursorPayload {
+                sort_field: resolved.sort.clone(),
+                direction: resolved.direction.clone(),
+                last_value,
+                last_id: last_row.id,
+            };
+
+            encode_cursor(&payload, state.cursor_secret.as_bytes())
+        })
+    } else {
+        None
+    };
 
     let result: Vec<PropertyListing> = rows.into_iter().map(PropertyListing::from).collect();
-
-    if result.is_empty() {
-        debug!("/v1/listings -> {}", StatusCode::NOT_FOUND);
-        return Err(ApiError::NotFound(Some(format!(
-            "no property listings found"
-        ))));
-    }
-
-    debug!("/v1/listings -> {}", StatusCode::OK);
     let count = result.len() as u32;
 
     Ok(Json(ApiResponse {
         data: result,
-        meta: Some(MetaData { count }),
+        meta: Some(MetaData { count, next_cursor }),
     }))
 }

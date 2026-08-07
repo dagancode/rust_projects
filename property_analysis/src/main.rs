@@ -50,6 +50,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     debug!("Listening on port {port}");
 
     let jwt_secret = std::env::var("JWT_SECRET").expect("JWT_SECRET must be set in .env");
+    let cursor_secret = std::env::var("CURSOR_SECRET").expect("JWT_SECRET must be set in .env");
     let database_url = std::env::var("DATABASE_URL").expect("DATABASE_URL must be set in .env");
 
     let db = PgPool::connect(&database_url).await?;
@@ -96,6 +97,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         encoding_key: jsonwebtoken::EncodingKey::from_secret(jwt_secret.as_bytes()),
         decoding_key: jsonwebtoken::DecodingKey::from_secret(jwt_secret.as_bytes()),
         jwt_secret,
+        cursor_secret,
     };
 
     let cors = CorsLayer::new()

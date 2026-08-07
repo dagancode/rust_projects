@@ -65,6 +65,6 @@ pub async fn get_suburb_value_signals(
 
     Ok(Json(ApiResponse {
         data: result,
-        meta: Some(MetaData { count }),
+        meta: Some(MetaData { count, next_cursor: None }),
     }))
 }

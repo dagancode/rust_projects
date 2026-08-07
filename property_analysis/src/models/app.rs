@@ -6,4 +6,5 @@ pub struct AppState {
     pub encoding_key: jsonwebtoken::EncodingKey,
     pub decoding_key: jsonwebtoken::DecodingKey,
     pub jwt_secret: String,
+    pub cursor_secret: String,
 }

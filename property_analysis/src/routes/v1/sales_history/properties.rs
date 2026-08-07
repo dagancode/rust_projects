@@ -113,6 +113,6 @@ pub async fn get_property_sales_history(
 
     Ok(Json(ApiResponse {
         data: results,
-        meta: Some(MetaData { count }),
+        meta: Some(MetaData { count, next_cursor: None }),
     }))
 }

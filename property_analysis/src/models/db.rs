@@ -25,7 +25,8 @@ pub struct PropertySaleRow {
 
 #[derive(sqlx::FromRow)]
 pub struct PropertyListingRow {
-    pub source_url: String,
+    pub id: Uuid,
+    // pub source_url: String,
     pub title: String,
     pub price: Decimal,
     pub address: String,
@@ -58,7 +59,7 @@ pub struct PropertyListingRow {
 impl From<PropertyListingRow> for PropertyListing {
     fn from(row: PropertyListingRow) -> Self {
         Self {
-            source_url: row.source_url,
+            source_url: "none".to_string(),
             title: row.title,
             price: row.price,
             address: row.address,
